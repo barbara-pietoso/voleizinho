@@ -1,12 +1,26 @@
 import streamlit as st
 import datetime
+import json
+import os
+
+# Caminho do arquivo JSON para armazenar os dados
+data_file = "volei_agenda.json"
 
 # Função para carregar ou inicializar os dados
-def init_session():
-    if 'volei_agenda' not in st.session_state:
-        st.session_state.volei_agenda = {
+def load_data():
+    if os.path.exists(data_file):
+        with open(data_file, "r") as f:
+            return json.load(f)
+    else:
+        # Caso o arquivo não exista, inicializa com dados padrão
+        return {
             day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in ['Segunda 19h', 'Terça 19h', 'Quarta 19h', 'Quinta 19h', 'Sexta 19h', 'Sábado 18h', 'Domingo 18h']
         }
+
+# Função para salvar os dados no arquivo JSON
+def save_data(data):
+    with open(data_file, "w") as f:
+        json.dump(data, f, indent=4)
 
 # Função para limpar dias passados
 def clean_past_days():
@@ -17,8 +31,8 @@ def clean_past_days():
         for past_day in days[:index]:
             st.session_state.volei_agenda.pop(past_day, None)
 
-# Inicializa os dados e limpa dias passados
-init_session()
+# Carregar os dados ao iniciar o app
+st.session_state.volei_agenda = load_data()
 clean_past_days()
 
 st.title("Lista de Jogos de Vôlei 🏐")
@@ -41,6 +55,9 @@ if st.button("Entrar na Lista") and name:
             else:
                 day_data['Substitutos'].append(name)
             st.success(f"{name} adicionado à lista de {selected_day}!")
+    
+    # Salva as informações após a alteração
+    save_data(st.session_state.volei_agenda)
     st.rerun()
 
 # Exibição de todas as listas abaixo numeradas
@@ -56,7 +73,8 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
-    init_session()
+    st.session_state.volei_agenda = load_data()  # Carrega os dados iniciais
+    save_data(st.session_state.volei_agenda)
     st.success("Listas resetadas!")
     st.rerun()
 
