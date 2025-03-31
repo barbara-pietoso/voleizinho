@@ -53,8 +53,12 @@ def remove_name(day, name, role):
 if "volei_agenda" not in st.session_state:
     st.session_state.volei_agenda = load_data()
 
-if "selected_day" not in st.session_state:
-    st.session_state.selected_day = None  # Para manter a aba ativa
+# Inicializa o estado do dia selecionado com o primeiro dia da lista
+if "selected_day" not in st.session_state or st.session_state.selected_day not in st.session_state.volei_agenda:
+    st.session_state.selected_day = list(st.session_state.volei_agenda.keys())[0]
+
+# Exibir a lista do dia selecionado
+day_data = st.session_state.volei_agenda[st.session_state.selected_day]
 
 st.title("Voleizinho da Semana 🏐")
 
