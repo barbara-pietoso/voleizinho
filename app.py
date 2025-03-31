@@ -7,7 +7,7 @@ from datetime import timedelta
 # Configurações iniciais (mantenha igual)
 data_file = "volei_agenda.json"
 quadras_file = "volei_quadras.json"
-QUADRAS_DISPONIVEIS = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "24", "25", "26"]
+QUADRAS_DISPONIVEIS = ["quadra não reservada", "11", "12", "13", "14", "15", "16", "17", "18", "19", "24", "25", "26"]
 
 # Funções de carregamento/salvamento (mantenha igual)
 def load_data():
