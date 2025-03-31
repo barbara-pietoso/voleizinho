@@ -102,7 +102,7 @@ with tab1:
     - Atribua uma quadra para cada dia dentro da aba do dia
     - Para sair de uma lista, clique no ❌ ao lado do seu nome
 
-        **Regras do grupo**
+    **Regras do grupo**
      1) jogamos sempre a partir das listas criadas no grupo; 📝
  
      2) estabelecemos uma lista de 15 pessoas + 3 reservas para os jogos, mais a lista de substituições, por ordem de preenchimento. 
