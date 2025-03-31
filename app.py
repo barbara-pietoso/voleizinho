@@ -107,7 +107,8 @@ with tab1:
  
      2) estabelecemos uma lista de 15 pessoas + 3 reservas para os jogos, mais a lista de substituições, por ordem de preenchimento. 
      primeiro entram para a lista os "reservas" e conforme for liberando vaga entram os "substitutos", de forma automática, no lugar de pessoas desistentes. 
-     portanto: 🔄
+     
+     *portanto: 🔄
      - reserva: joga revezando
      - substituto: entra para a lista somente conforme as desistências 
      
