@@ -5,7 +5,7 @@ import datetime
 def init_session():
     if 'volei_agenda' not in st.session_state:
         st.session_state.volei_agenda = {
-            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
+            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in ['Segunda 19h', 'Terça 19h', 'Quarta 19h', 'Quinta 19h', 'Sexta 19h', 'Sábado 18h', 'Domingo 18h']
         }
 
 # Função para limpar dias passados
@@ -23,34 +23,36 @@ clean_past_days()
 
 st.title("Lista de Jogos de Vôlei 🏐")
 
-# Seleção do dia
-selected_day = st.selectbox("Escolha um dia da semana:", list(st.session_state.volei_agenda.keys()))
-
-# Exibição da lista atual
-day_data = st.session_state.volei_agenda[selected_day]
-
-st.subheader(f"Lista de {selected_day}")
-st.text(f"Titulares ({len(day_data['Titulares'])}/15):")
-st.write(day_data['Titulares'])
-st.text(f"Reservas ({len(day_data['Reservas'])}/3):")
-st.write(day_data['Reservas'])
-st.text(f"Substitutos:")
-st.write(day_data['Substitutos'])
+# Seleção de múltiplos dias
+days_selected = st.multiselect("Escolha os dias da semana:", list(st.session_state.volei_agenda.keys()))
 
 # Entrada para adicionar jogador
 name = st.text_input("Seu nome:")
 if st.button("Entrar na Lista") and name:
-    if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
-        st.warning("Você já está na lista!")
-    else:
-        if len(day_data['Titulares']) < 15:
-            day_data['Titulares'].append(name)
-        elif len(day_data['Reservas']) < 3:
-            day_data['Reservas'].append(name)
+    for selected_day in days_selected:
+        day_data = st.session_state.volei_agenda[selected_day]
+        if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
+            st.warning(f"Você já está na lista de {selected_day}!")
         else:
-            day_data['Substitutos'].append(name)
-        st.success(f"{name} adicionado à lista de {selected_day}!")
-        st.rerun()
+            if len(day_data['Titulares']) < 15:
+                day_data['Titulares'].append(name)
+            elif len(day_data['Reservas']) < 3:
+                day_data['Reservas'].append(name)
+            else:
+                day_data['Substitutos'].append(name)
+            st.success(f"{name} adicionado à lista de {selected_day}!")
+    st.rerun()
+
+# Exibição de todas as listas abaixo numeradas
+st.subheader("Listas da Semana")
+for i, (day, data) in enumerate(st.session_state.volei_agenda.items(), start=1):
+    st.markdown(f"### {i}. {day}")
+    st.text(f"Titulares ({len(data['Titulares'])}/15):")
+    st.write(data['Titulares'])
+    st.text(f"Reservas ({len(data['Reservas'])}/3):")
+    st.write(data['Reservas'])
+    st.text(f"Substitutos:")
+    st.write(data['Substitutos'])
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
