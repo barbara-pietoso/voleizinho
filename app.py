@@ -40,74 +40,82 @@ def remove_name(day, name, role):
         st.success(f"{name} removido da lista de {role} de {day}!")
         st.rerun()
 
-# Carregar os dados ao iniciar o app
-st.session_state.volei_agenda = load_data()
-clean_past_days()
-
-st.title("Voleizinho da Semana 🏐")
-
-# Seleção de múltiplos dias
-days_selected = st.multiselect("Escolha os dias da semana:", list(st.session_state.volei_agenda.keys()))
-
-# Entrada para adicionar jogador
-name = st.text_input("Seu nome:")
-if st.button("Entrar na Lista") and name:
-    for selected_day in days_selected:
-        day_data = st.session_state.volei_agenda[selected_day]
-        if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
-            st.warning(f"Você já está na lista de {selected_day}!")
-        else:
-            if len(day_data['Titulares']) < 15:
-                day_data['Titulares'].append(name)
-            elif len(day_data['Reservas']) < 3:
-                day_data['Reservas'].append(name)
-            else:
-                day_data['Substitutos'].append(name)
-            st.success(f"{name} adicionado à lista de {selected_day}!")
+# Função para a página de início
+def inicio():
+    st.title("Bem-vindo ao Voleizinho 🏐")
+    st.write("Esta é a página de início. Clique no botão abaixo para acessar a lista de jogos de vôlei da semana.")
     
-    # Salva as informações após a alteração
-    save_data(st.session_state.volei_agenda)
-    st.rerun()
+    if st.button("Acessar"):
+        st.session_state.page = "jogos"  # Mudando o estado da página para "jogos"
 
-# Exibição de todas as listas abaixo numeradas
-tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_agenda.keys(), start=1)])
-for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
-    with tab:
-        st.text(f"Titulares ({len(data['Titulares'])}/15):")
-        for i, name in enumerate(data['Titulares']):
-            # Adiciona o botão de remoção ao lado do nome com key única
-            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
-            with col1:
+# Função para a página de jogos
+def jogos():
+    # Carregar dados e limpar dias passados
+    st.session_state.volei_agenda = load_data()
+    clean_past_days()
+
+    st.title("Voleizinho da Semana 🏐")
+
+    # Seleção de múltiplos dias
+    days_selected = st.multiselect("Escolha os dias da semana:", list(st.session_state.volei_agenda.keys()))
+
+    # Entrada para adicionar jogador
+    name = st.text_input("Seu nome:")
+    if st.button("Entrar na Lista") and name:
+        for selected_day in days_selected:
+            day_data = st.session_state.volei_agenda[selected_day]
+            if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
+                st.warning(f"Você já está na lista de {selected_day}!")
+            else:
+                if len(day_data['Titulares']) < 15:
+                    day_data['Titulares'].append(name)
+                elif len(day_data['Reservas']) < 3:
+                    day_data['Reservas'].append(name)
+                else:
+                    day_data['Substitutos'].append(name)
+                st.success(f"{name} adicionado à lista de {selected_day}!")
+
+        # Salva as informações após a alteração
+        save_data(st.session_state.volei_agenda)
+        st.rerun()
+
+    # Exibição de todas as listas abaixo numeradas
+    tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_agenda.keys(), start=1)])
+    for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
+        with tab:
+            st.text(f"**Titulares** ({len(data['Titulares'])}/15):")
+            for i, name in enumerate(data['Titulares']):
                 st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Titulares_{name}"):
+                if st.button(f"Remover {name}", key=f"remove_titulares_{i}"):
                     remove_name(day, name, 'Titulares')
 
-        st.text(f"Reservas ({len(data['Reservas'])}/3):")
-        for i, name in enumerate(data['Reservas']):
-            # Adiciona o botão de remoção ao lado do nome com key única
-            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
-            with col1:
+            st.text(f"**Reservas** ({len(data['Reservas'])}/3):")
+            for i, name in enumerate(data['Reservas']):
                 st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Reservas_{name}"):
+                if st.button(f"Remover {name}", key=f"remove_reservas_{i}"):
                     remove_name(day, name, 'Reservas')
 
-        st.text(f"Substitutos:")
-        for i, name in enumerate(data['Substitutos']):
-            # Adiciona o botão de remoção ao lado do nome com key única
-            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
-            with col1:
+            st.text(f"**Substitutos:**")
+            for i, name in enumerate(data['Substitutos']):
                 st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Substitutos_{name}"):
+                if st.button(f"Remover {name}", key=f"remove_substitutos_{i}"):
                     remove_name(day, name, 'Substitutos')
 
-# Botão de reset (visível só para o administrador)
-if st.button("Resetar Semana (Apenas Admin)"):
-    st.session_state.volei_agenda = load_data()  # Carrega os dados iniciais
-    save_data(st.session_state.volei_agenda)
-    st.success("Listas resetadas!")
-    st.rerun()
+    # Botão de reset (visível só para o administrador)
+    if st.button("Resetar Semana (Apenas Admin)"):
+        st.session_state.volei_agenda = load_data()  # Carrega os dados iniciais
+        save_data(st.session_state.volei_agenda)
+        st.success("Listas resetadas!")
+        st.rerun()
+
+# Configuração da navegação
+if "page" not in st.session_state:
+    st.session_state.page = "inicio"  # Página inicial por padrão
+
+if st.session_state.page == "inicio":
+    inicio()
+elif st.session_state.page == "jogos":
+    jogos()
+
 
 
