@@ -1,53 +1,3 @@
-import streamlit as st
-import datetime
-import json
-import os
-
-# Caminho do arquivo JSON para armazenar os dados
-data_file = "volei_agenda.json"
-
-# Função para carregar ou inicializar os dados
-def load_data():
-    if os.path.exists(data_file):
-        with open(data_file, "r") as f:
-            return json.load(f)
-    else:
-        # Caso o arquivo não exista, inicializa com dados padrão
-        return {
-            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in ['Segunda 19h', 'Terça 19h', 'Quarta 19h', 'Quinta 19h', 'Sexta 19h', 'Sábado 18h', 'Domingo 18h']
-        }
-
-# Função para salvar os dados no arquivo JSON
-def save_data(data):
-    with open(data_file, "w") as f:
-        json.dump(data, f, indent=4)
-
-# Função para limpar dias passados
-def clean_past_days():
-    today = datetime.datetime.today().strftime('%A')
-    days = list(st.session_state.volei_agenda.keys())
-    if today in days:
-        index = days.index(today)
-        for past_day in days[:index]:
-            st.session_state.volei_agenda.pop(past_day, None)
-
-# Função para remover um nome
-def remove_name(day, name, role):
-    day_data = st.session_state.volei_agenda[day]
-    if name in day_data[role]:
-        day_data[role].remove(name)
-        save_data(st.session_state.volei_agenda)
-        st.success(f"{name} removido da lista de {role} de {day}!")
-        st.rerun()
-
-# Função para a página de início
-def inicio():
-    st.title("Bem-vindo ao Voleizinho 🏐")
-    st.write("Esta é a página de início. Clique no botão abaixo para acessar a lista de jogos de vôlei da semana.")
-    
-    if st.button("Acessar"):
-        st.session_state.page = "jogos"  # Mudando o estado da página para "jogos"
-
 # Função para a página de jogos
 def jogos():
     # Carregar dados e limpar dias passados
@@ -86,19 +36,19 @@ def jogos():
             st.text(f"**Titulares** ({len(data['Titulares'])}/15):")
             for i, name in enumerate(data['Titulares']):
                 st.write(f"{i+1}. {name}")
-                if st.button(f"Remover {name}", key=f"remove_titulares_{i}"):
+                if st.button(f"Remover {name}", key=f"remove_titulares_{day}_{i}"):  # Modificado para garantir chave única
                     remove_name(day, name, 'Titulares')
 
             st.text(f"**Reservas** ({len(data['Reservas'])}/3):")
             for i, name in enumerate(data['Reservas']):
                 st.write(f"{i+1}. {name}")
-                if st.button(f"Remover {name}", key=f"remove_reservas_{i}"):
+                if st.button(f"Remover {name}", key=f"remove_reservas_{day}_{i}"):  # Modificado para garantir chave única
                     remove_name(day, name, 'Reservas')
 
-            st.text(f"**Substitutos:**")
+            st.text(f"**Substitutos**:")
             for i, name in enumerate(data['Substitutos']):
                 st.write(f"{i+1}. {name}")
-                if st.button(f"Remover {name}", key=f"remove_substitutos_{i}"):
+                if st.button(f"Remover {name}", key=f"remove_substitutos_{day}_{i}"):  # Modificado para garantir chave única
                     remove_name(day, name, 'Substitutos')
 
     # Botão de reset (visível só para o administrador)
@@ -107,15 +57,6 @@ def jogos():
         save_data(st.session_state.volei_agenda)
         st.success("Listas resetadas!")
         st.rerun()
-
-# Configuração da navegação
-if "page" not in st.session_state:
-    st.session_state.page = "inicio"  # Página inicial por padrão
-
-if st.session_state.page == "inicio":
-    inicio()
-elif st.session_state.page == "jogos":
-    jogos()
 
 
 
