@@ -187,16 +187,7 @@ with tab2:
         st.success("Todas as listas foram resetadas!")
         st.rerun()
 
-# Script para limpar o hash da URL
-st.components.v1.html("""
-<script>
-window.addEventListener('load', function() {
-    if(window.location.hash) {
-        history.replaceState(null, null, window.location.pathname);
-    }
-});
-</script>
-""")
+
 
 
 
