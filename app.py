@@ -94,7 +94,7 @@ initialize_data()
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
 
 with tab1:
-    st.title("COLEIZINHO PRA CURAR ONDE DÓI 🏐🩹🌈")
+    st.title("VOLEIZINHO PRA CURAR ONDE DÓI 🏐🩹🌈")
     st.write("""
     **Como usar:**
     - Na aba 'Listas da Semana', selecione os dias que deseja jogar
