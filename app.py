@@ -75,21 +75,21 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
     with tab:
         st.text(f"Titulares ({len(data['Titulares'])}/15):")
         for i, name in enumerate(data['Titulares']):
-            st.write(f"{i+1}. {name}")
-            if st.button(f"Remover {name}", key=f"remove_titulares_{day}_{name}_{i}"):
-                remove_name(day, name, 'Titulares')
+            st.write(f"{i+1}. {name} " + 
+                     f'<button class="small-button" onclick="remove_name(\'{day}\', \'{name}\', \'Titulares\')">❌</button>', 
+                     unsafe_allow_html=True)
         
         st.text(f"Reservas ({len(data['Reservas'])}/3):")
         for i, name in enumerate(data['Reservas']):
-            st.write(f"{i+1}. {name}")
-            if st.button(f"Remover {name}", key=f"remove_reservas_{day}_{name}_{i}"):
-                remove_name(day, name, 'Reservas')
+            st.write(f"{i+1}. {name} " + 
+                     f'<button class="small-button" onclick="remove_name(\'{day}\', \'{name}\', \'Reservas\')">❌</button>', 
+                     unsafe_allow_html=True)
         
         st.text(f"Substitutos:")
         for i, name in enumerate(data['Substitutos']):
-            st.write(f"{i+1}. {name}")
-            if st.button(f"Remover {name}", key=f"remove_substitutos_{day}_{name}_{i}"):
-                remove_name(day, name, 'Substitutos')
+            st.write(f"{i+1}. {name} " + 
+                     f'<button class="small-button" onclick="remove_name(\'{day}\', \'{name}\', \'Substitutos\')">❌</button>', 
+                     unsafe_allow_html=True)
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
@@ -98,4 +98,21 @@ if st.button("Resetar Semana (Apenas Admin)"):
     st.success("Listas resetadas!")
     st.rerun()
 
+# Adicionando o estilo customizado (botões pequenos)
+st.markdown("""
+    <style>
+        .small-button {
+            font-size: 12px;
+            color: #FFFFFF;
+            background-color: #FF4B4B;
+            border: none;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .small-button:hover {
+            background-color: #FF0000;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
