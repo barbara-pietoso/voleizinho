@@ -2,7 +2,7 @@ import streamlit as st
 import datetime
 
 # Função para carregar ou inicializar os dados
-def init_session():d
+def init_session():
     if 'volei_agenda' not in st.session_state:
         st.session_state.volei_agenda = {
             day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
