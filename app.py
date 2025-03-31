@@ -50,40 +50,70 @@ def get_current_week_days():
     
     return days
 
-# Função para inicializar os dados da semana
+# Adicione esta função para carregar/salvar as quadras
+def load_quadras():
+    quadras_file = "volei_quadras.json"
+    if os.path.exists(quadras_file):
+        with open(quadras_file, "r") as f:
+            return json.load(f)
+    else:
+        return {}
+
+def save_quadras(data):
+    quadras_file = "volei_quadras.json"
+    with open(quadras_file, "w") as f:
+        json.dump(data, f, indent=4)
+
+# Modifique a função initialize_week_data para incluir quadras
 def initialize_week_data():
     week_days = get_current_week_days()
     if not st.session_state.volei_agenda or not any(day.split()[0] in str(st.session_state.volei_agenda.keys()) for day in week_days):
         st.session_state.volei_agenda = {
-            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in week_days
+            day: {
+                'Titulares': [], 
+                'Reservas': [], 
+                'Substitutos': [],
+                'Quadra': None  # Adicionado campo para quadra
+            } for day in week_days
         }
         save_data(st.session_state.volei_agenda)
-
-# Função para remover um nome e reorganizar listas
-def remove_name(day, name, role):
-    day_data = st.session_state.volei_agenda[day]
     
-    if name in day_data[role]:
-        day_data[role].remove(name)
+    # Inicializa as quadras se não existirem
+    if 'quadras' not in st.session_state:
+        st.session_state.quadras = load_quadras()
+        if not st.session_state.quadras:
+            st.session_state.quadras = {day: None for day in week_days}
+            save_quadras(st.session_state.quadras)
 
-        if role == "Titulares" and day_data["Reservas"]:
-            promoted = day_data["Reservas"].pop(0)
-            day_data["Titulares"].append(promoted)
-            if day_data["Substitutos"]:
-                new_reserva = day_data["Substitutos"].pop(0)
-                day_data["Reservas"].append(new_reserva)
-        elif role == "Reservas" and day_data["Substitutos"]:
-            promoted = day_data["Substitutos"].pop(0)
-            day_data["Reservas"].append(promoted)
-
-        save_data(st.session_state.volei_agenda)
-        st.success(f"{name} removido e lista reorganizada para {day}!")
-        st.rerun()
-
-# Carregar os dados ao iniciar o app
-if 'volei_agenda' not in st.session_state:
-    st.session_state.volei_agenda = load_data()
-    initialize_week_data()
+# No seu código principal, dentro da aba "Listas da Semana", adicione:
+with tab2:
+    st.title("Listas da Semana 🏐")
+    
+    # Quadras disponíveis
+    QUADRAS_DISPONIVEIS = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "24", "25", "26", "quadra fechada"]
+    
+    # Seleção de múltiplos dias
+    days_selected = st.multiselect("Escolha os dias da semana:", list(st.session_state.volei_agenda.keys()))
+    
+    # Adicione esta seção para seleção de quadras
+    st.subheader("Atribuir Quadras")
+    cols = st.columns(3)  # Cria 3 colunas para organizar os selects
+    quadras_por_dia = {}
+    
+    for i, day in enumerate(st.session_state.volei_agenda.keys()):
+        with cols[i % 3]:  # Distribui os dias em 3 colunas
+            quadra_atual = st.session_state.quadras.get(day, None)
+            quadra_selecionada = st.selectbox(
+                f"Quadra para {day.split()[0]}",
+                options=[""] + QUADRAS_DISPONIVEIS,
+                index=0 if quadra_atual is None else QUADRAS_DISPONIVEIS.index(quadra_atual) + 1,
+                key=f"quadra_{day}"
+            )
+            
+            if quadra_selecionada != quadra_atual:
+                st.session_state.quadras[day] = quadra_selecionada if quadra_selecionada else None
+                save_quadras(st.session_state.quadras)
+                st.rerun()
 
 # Layout com abas
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
@@ -135,6 +165,8 @@ with tab2:
     tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_agenda.keys(), start=1)])
     for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
         with tab:
+            quadra = st.session_state.quadras.get(day, "Não definida")
+            st.subheader(f"{day} - Quadra: {quadra}" if quadra else f"{day} - Quadra não definida")
             st.text(f"Titulares ({len(data['Titulares'])}/15):")
             for i, name in enumerate(data['Titulares']):
                 col1, col2 = st.columns([6, 1])
