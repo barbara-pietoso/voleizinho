@@ -2,8 +2,9 @@ import streamlit as st
 import datetime
 import json
 import os
+from datetime import timedelta
 
-# Caminho do arquivo JSON para armazenar os dados 
+# Caminho do arquivo JSON para armazenar os dados
 data_file = "volei_agenda.json"
 
 # Função para carregar ou inicializar os dados
@@ -12,24 +13,58 @@ def load_data():
         with open(data_file, "r") as f:
             return json.load(f)
     else:
-        return {
-            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in 
-            ['Segunda 19h -  quadra 24 ', 'Terça 19h', 'Quarta 19h -  quadra 24', 'Quinta 19h -  quadra 24', 'Sexta 19h', 'Sábado 18h -  quadra 24', 'Domingo 18h']
-        }
+        # Os dias serão gerados dinamicamente na função get_current_week_days()
+        return {}
 
 # Função para salvar os dados no arquivo JSON
 def save_data(data):
     with open(data_file, "w") as f:
         json.dump(data, f, indent=4)
 
-# Função para limpar dias passados
-def clean_past_days():
-    today = datetime.datetime.today().strftime('%A')
-    days = list(st.session_state.volei_agenda.keys())
-    if today in days:
-        index = days.index(today)
-        for past_day in days[:index]:
-            st.session_state.volei_agenda.pop(past_day, None)
+# Função para obter os dias da semana atual formatados
+def get_current_week_days():
+    today = datetime.date.today()
+    start_of_week = today - timedelta(days=today.weekday())  # Segunda-feira da semana atual
+    
+    days = []
+    for i in range(7):
+        current_day = start_of_week + timedelta(days=i)
+        day_name = current_day.strftime("%A")  # Nome do dia (Monday, Tuesday, etc.)
+        day_date = current_day.strftime("%d/%m")  # Data formatada
+        
+        # Mapeia os nomes dos dias em inglês para português
+        day_translation = {
+            "Monday": "Segunda",
+            "Tuesday": "Terça",
+            "Wednesday": "Quarta",
+            "Thursday": "Quinta",
+            "Friday": "Sexta",
+            "Saturday": "Sábado",
+            "Sunday": "Domingo"
+        }
+        
+        day_name_pt = day_translation.get(day_name, day_name)
+        
+        # Adiciona os horários específicos para cada dia
+        if day_name in ["Monday", "Wednesday", "Thursday", "Saturday"]:
+            time_info = "19h - quadra 24" if day_name != "Saturday" else "18h - quadra 24"
+        elif day_name == "Sunday":
+            time_info = "18h"
+        else:
+            time_info = "19h"
+        
+        days.append(f"{day_name_pt} {day_date} {time_info}")
+    
+    return days
+
+# Função para inicializar os dados da semana se necessário
+def initialize_week_data():
+    week_days = get_current_week_days()
+    if not st.session_state.volei_agenda or not any(day in st.session_state.volei_agenda for day in week_days):
+        st.session_state.volei_agenda = {
+            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in week_days
+        }
+        save_data(st.session_state.volei_agenda)
 
 # Função para remover um nome e reorganizar listas
 def remove_name(day, name, role):
@@ -59,70 +94,94 @@ def remove_name(day, name, role):
         st.rerun()
 
 # Carregar os dados ao iniciar o app
-st.session_state.volei_agenda = load_data()
-clean_past_days()
-
-st.title("Voleizinho da Semana 🏐")
-
-# Seleção de múltiplos dias
-days_selected = st.multiselect("Escolha os dias da semana:", list(st.session_state.volei_agenda.keys()))
-
-# Entrada para adicionar jogador
-name = st.text_input("Seu nome:")
-if st.button("Entrar na Lista") and name:
-    for selected_day in days_selected:
-        day_data = st.session_state.volei_agenda[selected_day]
-        if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
-            st.warning(f"Você já está na lista de {selected_day}!")
-        else:
-            if len(day_data['Titulares']) < 15:
-                day_data['Titulares'].append(name)
-            elif len(day_data['Reservas']) < 3:
-                day_data['Reservas'].append(name)
-            else:
-                day_data['Substitutos'].append(name)
-            st.success(f"{name} adicionado à lista de {selected_day}!")
-    
-    save_data(st.session_state.volei_agenda)
-    st.rerun()
-
-# Exibição de todas as listas abaixo numeradas
-tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_agenda.keys(), start=1)])
-for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
-    with tab:
-        st.text(f"Titulares ({len(data['Titulares'])}/15):")
-        for i, name in enumerate(data['Titulares']):
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Titulares_{name}"):
-                    remove_name(day, name, 'Titulares')
-
-        st.text(f"Reservas ({len(data['Reservas'])}/3):")
-        for i, name in enumerate(data['Reservas']):
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Reservas_{name}"):
-                    remove_name(day, name, 'Reservas')
-
-        st.text(f"Substitutos:")
-        for i, name in enumerate(data['Substitutos']):
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Substitutos_{name}"):
-                    remove_name(day, name, 'Substitutos')
-
-# Botão de reset (visível só para o administrador)
-if st.button("Resetar Semana (Apenas Admin)"):
+if 'volei_agenda' not in st.session_state:
     st.session_state.volei_agenda = load_data()
-    save_data(st.session_state.volei_agenda)
-    st.success("Listas resetadas!")
-    st.rerun()
+    initialize_week_data()
+
+# Layout com abas
+tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
+
+with tab1:
+    st.title("Bem-vindo ao Voleizinho da Semana 🏐")
+    st.write("""
+    Este aplicativo ajuda a organizar as listas de jogadores para os dias de vôlei da semana.
+    
+    **Como usar:**
+    1. Na aba 'Listas da Semana', selecione os dias que deseja jogar
+    2. Digite seu nome e clique em 'Entrar na Lista'
+    3. Para sair de uma lista, clique no botão ❌ ao lado do seu nome
+    
+    **Regras:**
+    - Máximo de 15 titulares por dia
+    - Máximo de 3 reservas por dia
+    - Substitutos ilimitados
+    - Quando um titular sai, o primeiro reserva é promovido
+    - Quando um reserva sai, o primeiro substituto é promovido
+    """)
+
+with tab2:
+    st.title("Listas da Semana 🏐")
+    
+    # Seleção de múltiplos dias
+    days_selected = st.multiselect("Escolha os dias da semana:", list(st.session_state.volei_agenda.keys()))
+
+    # Entrada para adicionar jogador
+    name = st.text_input("Seu nome:")
+    if st.button("Entrar na Lista") and name:
+        for selected_day in days_selected:
+            day_data = st.session_state.volei_agenda[selected_day]
+            if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
+                st.warning(f"Você já está na lista de {selected_day}!")
+            else:
+                if len(day_data['Titulares']) < 15:
+                    day_data['Titulares'].append(name)
+                elif len(day_data['Reservas']) < 3:
+                    day_data['Reservas'].append(name)
+                else:
+                    day_data['Substitutos'].append(name)
+                st.success(f"{name} adicionado à lista de {selected_day}!")
+        
+        save_data(st.session_state.volei_agenda)
+        st.rerun()
+
+    # Exibição de todas as listas abaixo numeradas
+    tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_agenda.keys(), start=1)])
+    for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
+        with tab:
+            st.text(f"Titulares ({len(data['Titulares'])}/15):")
+            for i, name in enumerate(data['Titulares']):
+                col1, col2 = st.columns([6, 1])
+                with col1:
+                    st.write(f"{i+1}. {name}")
+                with col2:
+                    if st.button(f"❌", key=f"remove_{day}_Titulares_{name}"):
+                        remove_name(day, name, 'Titulares')
+
+            st.text(f"Reservas ({len(data['Reservas'])}/3):")
+            for i, name in enumerate(data['Reservas']):
+                col1, col2 = st.columns([6, 1])
+                with col1:
+                    st.write(f"{i+1}. {name}")
+                with col2:
+                    if st.button(f"❌", key=f"remove_{day}_Reservas_{name}"):
+                        remove_name(day, name, 'Reservas')
+
+            st.text(f"Substitutos:")
+            for i, name in enumerate(data['Substitutos']):
+                col1, col2 = st.columns([6, 1])
+                with col1:
+                    st.write(f"{i+1}. {name}")
+                with col2:
+                    if st.button(f"❌", key=f"remove_{day}_Substitutos_{name}"):
+                        remove_name(day, name, 'Substitutos')
+
+    # Botão de reset (visível só para o administrador)
+    if st.button("Resetar Semana (Apenas Admin)"):
+        st.session_state.volei_agenda = {}
+        initialize_week_data()
+        save_data(st.session_state.volei_agenda)
+        st.success("Listas resetadas!")
+        st.rerun()
 
 
 
