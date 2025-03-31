@@ -31,6 +31,15 @@ def clean_past_days():
         for past_day in days[:index]:
             st.session_state.volei_agenda.pop(past_day, None)
 
+# Função para remover um nome
+def remove_name(day, name, role):
+    day_data = st.session_state.volei_agenda[day]
+    if name in day_data[role]:
+        day_data[role].remove(name)
+        save_data(st.session_state.volei_agenda)
+        st.success(f"{name} removido da lista de {role} de {day}!")
+        st.rerun()
+
 # Carregar os dados ao iniciar o app
 st.session_state.volei_agenda = load_data()
 clean_past_days()
@@ -65,11 +74,22 @@ tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_age
 for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
     with tab:
         st.text(f"Titulares ({len(data['Titulares'])}/15):")
-        st.write([f"{i+1}. {name}" for i, name in enumerate(data['Titulares'])])
+        for i, name in enumerate(data['Titulares']):
+            st.write(f"{i+1}. {name}")
+            if st.button(f"Remover {name} de Titulares ({day})"):
+                remove_name(day, name, 'Titulares')
+        
         st.text(f"Reservas ({len(data['Reservas'])}/3):")
-        st.write([f"{i+1}. {name}" for i, name in enumerate(data['Reservas'])])
+        for i, name in enumerate(data['Reservas']):
+            st.write(f"{i+1}. {name}")
+            if st.button(f"Remover {name} de Reservas ({day})"):
+                remove_name(day, name, 'Reservas')
+        
         st.text(f"Substitutos:")
-        st.write([f"{i+1}. {name}" for i, name in enumerate(data['Substitutos'])])
+        for i, name in enumerate(data['Substitutos']):
+            st.write(f"{i+1}. {name}")
+            if st.button(f"Remover {name} de Substitutos ({day})"):
+                remove_name(day, name, 'Substitutos')
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
@@ -77,5 +97,6 @@ if st.button("Resetar Semana (Apenas Admin)"):
     save_data(st.session_state.volei_agenda)
     st.success("Listas resetadas!")
     st.rerun()
+
 
 
