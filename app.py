@@ -75,21 +75,27 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
     with tab:
         st.text(f"Titulares ({len(data['Titulares'])}/15):")
         for i, name in enumerate(data['Titulares']):
-            st.write(f"{i+1}. {name} " + 
-                     f'<button class="small-button" onclick="remove_name(\'{day}\', \'{name}\', \'Titulares\')">❌</button>', 
-                     unsafe_allow_html=True)
-        
+            # Adiciona o botão de remoção ao lado do nome com key única
+            remove_button = st.button(f"❌", key=f"remove_{day}_Titulares_{name}")
+            if remove_button:
+                remove_name(day, name, 'Titulares')
+            st.write(f"{i+1}. {name}")
+
         st.text(f"Reservas ({len(data['Reservas'])}/3):")
         for i, name in enumerate(data['Reservas']):
-            st.write(f"{i+1}. {name} " + 
-                     f'<button class="small-button" onclick="remove_name(\'{day}\', \'{name}\', \'Reservas\')">❌</button>', 
-                     unsafe_allow_html=True)
-        
+            # Adiciona o botão de remoção ao lado do nome com key única
+            remove_button = st.button(f"❌", key=f"remove_{day}_Reservas_{name}")
+            if remove_button:
+                remove_name(day, name, 'Reservas')
+            st.write(f"{i+1}. {name}")
+
         st.text(f"Substitutos:")
         for i, name in enumerate(data['Substitutos']):
-            st.write(f"{i+1}. {name} " + 
-                     f'<button class="small-button" onclick="remove_name(\'{day}\', \'{name}\', \'Substitutos\')">❌</button>', 
-                     unsafe_allow_html=True)
+            # Adiciona o botão de remoção ao lado do nome com key única
+            remove_button = st.button(f"❌", key=f"remove_{day}_Substitutos_{name}")
+            if remove_button:
+                remove_name(day, name, 'Substitutos')
+            st.write(f"{i+1}. {name}")
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
