@@ -13,7 +13,6 @@ def load_data():
         with open(data_file, "r") as f:
             return json.load(f)
     else:
-        # Os dias serão gerados dinamicamente na função get_current_week_days()
         return {}
 
 # Função para salvar os dados no arquivo JSON
@@ -21,46 +20,43 @@ def save_data(data):
     with open(data_file, "w") as f:
         json.dump(data, f, indent=4)
 
-# Função para obter os dias da semana atual formatados
+# Função para obter os dias da semana atual formatados CORRIGIDA
 def get_current_week_days():
     today = datetime.date.today()
     start_of_week = today - timedelta(days=today.weekday())  # Segunda-feira da semana atual
     
+    days_order = [
+        "Segunda",
+        "Terça",
+        "Quarta",
+        "Quinta",
+        "Sexta",
+        "Sábado",
+        "Domingo"
+    ]
+    
     days = []
     for i in range(7):
-        current_day = start_of_week + timedelta(days=i)
-        day_name = current_day.strftime("%A")  # Nome do dia (Monday, Tuesday, etc.)
+        current_day = start_of__week + timedelta(days=i)
+        day_name = days_order[i]
         day_date = current_day.strftime("%d/%m")  # Data formatada
         
-        # Mapeia os nomes dos dias em inglês para português
-        day_translation = {
-            "Monday": "Segunda",
-            "Tuesday": "Terça",
-            "Wednesday": "Quarta",
-            "Thursday": "Quinta",
-            "Friday": "Sexta",
-            "Saturday": "Sábado",
-            "Sunday": "Domingo"
-        }
-        
-        day_name_pt = day_translation.get(day_name, day_name)
-        
-        # Adiciona os horários específicos para cada dia
-        if day_name in ["Monday", "Wednesday", "Thursday", "Saturday"]:
-            time_info = "19h - quadra 24" if day_name != "Saturday" else "18h - quadra 24"
-        elif day_name == "Sunday":
+        # Define os horários específicos para cada dia
+        if day_name in ["Segunda", "Quarta", "Quinta", "Sábado"]:
+            time_info = "19h - quadra 24" if day_name != "Sábado" else "18h - quadra 24"
+        elif day_name == "Domingo":
             time_info = "18h"
         else:
             time_info = "19h"
         
-        days.append(f"{day_name_pt} {day_date} {time_info}")
+        days.append(f"{day_name} {day_date} {time_info}")
     
     return days
 
 # Função para inicializar os dados da semana se necessário
 def initialize_week_data():
     week_days = get_current_week_days()
-    if not st.session_state.volei_agenda or not any(day in st.session_state.volei_agenda for day in week_days):
+    if not st.session_state.volei_agenda or not any(day.split()[0] in str(st.session_state.volei_agenda.keys()) for day in week_days):
         st.session_state.volei_agenda = {
             day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in week_days
         }
