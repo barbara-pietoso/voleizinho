@@ -89,7 +89,7 @@ if 'volei_agenda' not in st.session_state:
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
 
 with tab1:
-    st.title("VOLEIZINHO PRA CURAR ONDE DÓI 🏐")
+    st.title("VOLEIZINHO PRA CURAR ONDE DÓI 🏐❤️‍🩹🌈")
     st.write("""
     Este aplicativo ajuda a organizar as listas de jogadores para os dias de vôlei da semana.
     
