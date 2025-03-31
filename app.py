@@ -101,6 +101,21 @@ with tab1:
     - Digite seu nome e clique em 'Entrar na Lista'
     - Atribua uma quadra para cada dia dentro da aba do dia
     - Para sair de uma lista, clique no ❌ ao lado do seu nome
+
+        **Regras do grupo**
+     1) jogamos sempre a partir das listas criadas no grupo; 📝
+ 
+     2) estabelecemos uma lista de 15 pessoas + 3 reservas para os jogos, mais a lista de substituições, por ordem de preenchimento. 
+     primeiro entram para a lista os "reservas" e conforme for liberando vaga entram os "substitutos", de forma automática, no lugar de pessoas desistentes. 
+     portanto: 🔄
+     reserva: joga revezando
+     substituto: entra para a lista somente conforme as desistências 
+     
+     3) precisamos nos atentar para aqueles que colocam o nome na lista e não comparecem, já que isso prejudica aqueles que querem jogar e estão na lista de espera. lembrem de avisar com antecedência (tolerância de 2x, depois precisaremos tirar do grupo) 🔴
+     
+     4) jogadores de fora só podem entrar na lista caso esteja sobrando lugar NO DIA DO JOGO, dando prioridade aos participantes do grupo.
+     
+     5) com mais frequência será feita uma revisão no grupo, deixando apenas aqueles que estão comparecendo nos jogos com mais assiduidade 👀
     """)
 
 with tab2:
