@@ -44,7 +44,7 @@ def remove_name(day, name, role):
 st.session_state.volei_agenda = load_data()
 clean_past_days()
 
-st.title("Lista de Jogos de Vôlei 🏐")
+st.title("Voleizinho da Semana 🏐")
 
 # Seleção de múltiplos dias
 days_selected = st.multiselect("Escolha os dias da semana:", list(st.session_state.volei_agenda.keys()))
@@ -76,19 +76,19 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
         st.text(f"Titulares ({len(data['Titulares'])}/15):")
         for i, name in enumerate(data['Titulares']):
             st.write(f"{i+1}. {name}")
-            if st.button(f"Remover {name} de Titulares ({day})"):
+            if st.button(f"Remover {name}"):
                 remove_name(day, name, 'Titulares')
         
         st.text(f"Reservas ({len(data['Reservas'])}/3):")
         for i, name in enumerate(data['Reservas']):
             st.write(f"{i+1}. {name}")
-            if st.button(f"Remover {name} de Reservas ({day})"):
+            if st.button(f"Remover {name}"):
                 remove_name(day, name, 'Reservas')
         
         st.text(f"Substitutos:")
         for i, name in enumerate(data['Substitutos']):
             st.write(f"{i+1}. {name}")
-            if st.button(f"Remover {name} de Substitutos ({day})"):
+            if st.button(f"Remover {name}"):
                 remove_name(day, name, 'Substitutos')
 
 # Botão de reset (visível só para o administrador)
