@@ -109,19 +109,19 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
         st.text(f"**Titulares** ({len(data['Titulares'])}/15):")
         for i, name in enumerate(data['Titulares']):
             st.markdown(f"<p class='name-list'>{i+1}. {name}</p>", unsafe_allow_html=True)
-            if st.button(f"Remover {name} de Titulares", key=f"remove_titulares_{i}"):
+            if st.button(f"Remover {name} de Titulares", key=f"remove_titulares_{day}_{name}_{i}"):
                 remove_name(day, name, 'Titulares')
         
         st.text(f"**Reservas** ({len(data['Reservas'])}/3):")
         for i, name in enumerate(data['Reservas']):
             st.markdown(f"<p class='name-list'>{i+1}. {name}</p>", unsafe_allow_html=True)
-            if st.button(f"Remover {name} de Reservas", key=f"remove_reservas_{i}"):
+            if st.button(f"Remover {name} de Reservas", key=f"remove_reservas_{day}_{name}_{i}"):
                 remove_name(day, name, 'Reservas')
         
         st.text(f"**Substitutos**:")
         for i, name in enumerate(data['Substitutos']):
             st.markdown(f"<p class='name-list'>{i+1}. {name}</p>", unsafe_allow_html=True)
-            if st.button(f"Remover {name} de Substitutos", key=f"remove_substitutos_{i}"):
+            if st.button(f"Remover {name} de Substitutos", key=f"remove_substitutos_{day}_{name}_{i}"):
                 remove_name(day, name, 'Substitutos')
 
 # Botão de reset (visível só para o administrador)
@@ -130,5 +130,6 @@ if st.button("Resetar Semana (Apenas Admin)"):
     save_data(st.session_state.volei_agenda)
     st.success("Listas resetadas!")
     st.rerun()
+
 
 
