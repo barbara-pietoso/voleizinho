@@ -4,6 +4,11 @@ import json
 import os
 from datetime import timedelta
 
+# Configurações da página
+st.set_page_config(
+    page_title="VOLEIZINHO PRA CURAR ONDE DÓI",
+    page_icon="	:volleyball:",
+
 # Configurações iniciais
 data_file = "volei_agenda.json"
 quadras_file = "volei_quadras.json"
