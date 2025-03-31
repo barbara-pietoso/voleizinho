@@ -12,9 +12,9 @@ def load_data():
         with open(data_file, "r") as f:
             return json.load(f)
     else:
-        # Caso o arquivo não exista, inicializa com dados padrão
         return {
-            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in ['Segunda 19h', 'Terça 19h', 'Quarta 19h', 'Quinta 19h', 'Sexta 19h', 'Sábado 18h', 'Domingo 18h']
+            day: {'Titulares': [], 'Reservas': [], 'Substitutos': []} for day in 
+            ['Segunda 19h', 'Terça 19h', 'Quarta 19h', 'Quinta 19h', 'Sexta 19h', 'Sábado 18h', 'Domingo 18h']
         }
 
 # Função para salvar os dados no arquivo JSON
@@ -31,13 +31,31 @@ def clean_past_days():
         for past_day in days[:index]:
             st.session_state.volei_agenda.pop(past_day, None)
 
-# Função para remover um nome
+# Função para remover um nome e reorganizar listas
 def remove_name(day, name, role):
     day_data = st.session_state.volei_agenda[day]
+
+    # Remover nome da lista correspondente
     if name in day_data[role]:
         day_data[role].remove(name)
+
+        # Se for um Titular, promover um Reserva (se houver)
+        if role == "Titulares" and day_data["Reservas"]:
+            promoted = day_data["Reservas"].pop(0)
+            day_data["Titulares"].append(promoted)
+
+            # Se havia um Substituto, sobe para Reservas
+            if day_data["Substitutos"]:
+                new_reserva = day_data["Substitutos"].pop(0)
+                day_data["Reservas"].append(new_reserva)
+
+        # Se for um Reserva, promover um Substituto (se houver)
+        elif role == "Reservas" and day_data["Substitutos"]:
+            promoted = day_data["Substitutos"].pop(0)
+            day_data["Reservas"].append(promoted)
+
         save_data(st.session_state.volei_agenda)
-        st.success(f"{name} removido da lista de {role} de {day}!")
+        st.success(f"{name} removido e lista reorganizada para {day}!")
         st.rerun()
 
 # Carregar os dados ao iniciar o app
@@ -65,7 +83,6 @@ if st.button("Entrar na Lista") and name:
                 day_data['Substitutos'].append(name)
             st.success(f"{name} adicionado à lista de {selected_day}!")
     
-    # Salva as informações após a alteração
     save_data(st.session_state.volei_agenda)
     st.rerun()
 
@@ -75,8 +92,7 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
     with tab:
         st.text(f"Titulares ({len(data['Titulares'])}/15):")
         for i, name in enumerate(data['Titulares']):
-            # Adiciona o botão de remoção ao lado do nome com key única
-            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
+            col1, col2 = st.columns([6, 1])
             with col1:
                 st.write(f"{i+1}. {name}")
             with col2:
@@ -85,8 +101,7 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
 
         st.text(f"Reservas ({len(data['Reservas'])}/3):")
         for i, name in enumerate(data['Reservas']):
-            # Adiciona o botão de remoção ao lado do nome com key única
-            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
+            col1, col2 = st.columns([6, 1])
             with col1:
                 st.write(f"{i+1}. {name}")
             with col2:
@@ -95,8 +110,7 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
 
         st.text(f"Substitutos:")
         for i, name in enumerate(data['Substitutos']):
-            # Adiciona o botão de remoção ao lado do nome com key única
-            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
+            col1, col2 = st.columns([6, 1])
             with col1:
                 st.write(f"{i+1}. {name}")
             with col2:
@@ -105,10 +119,11 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
-    st.session_state.volei_agenda = load_data()  # Carrega os dados iniciais
+    st.session_state.volei_agenda = load_data()
     save_data(st.session_state.volei_agenda)
     st.success("Listas resetadas!")
     st.rerun()
+
 
 
 
