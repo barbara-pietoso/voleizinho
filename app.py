@@ -1,26 +1,3 @@
-import streamlit as st
-import datetime
-import json
-import os
-from datetime import timedelta
-
-# Caminho do arquivo JSON para armazenar os dados
-data_file = "volei_agenda.json"
-
-# Função para carregar ou inicializar os dados
-def load_data():
-    if os.path.exists(data_file):
-        with open(data_file, "r") as f:
-            return json.load(f)
-    else:
-        return {}
-
-# Função para salvar os dados no arquivo JSON
-def save_data(data):
-    with open(data_file, "w") as f:
-        json.dump(data, f, indent=4)
-
-# Função para obter os dias da semana atual formatados CORRIGIDA
 def get_current_week_days():
     today = datetime.date.today()
     start_of_week = today - timedelta(days=today.weekday())  # Segunda-feira da semana atual
@@ -37,7 +14,7 @@ def get_current_week_days():
     
     days = []
     for i in range(7):
-        current_day = start_of__week + timedelta(days=i)
+        current_day = start_of_week + timedelta(days=i)  # Corrigido: start_of_week com um underscore
         day_name = days_order[i]
         day_date = current_day.strftime("%d/%m")  # Data formatada
         
