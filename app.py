@@ -59,7 +59,12 @@ def remove_name(day, name, role):
         st.rerun()
 
 # Carregar os dados ao iniciar o app
-st.session_state.volei_agenda = load_data()
+if "volei_agenda" not in st.session_state:
+    st.session_state.volei_agenda = load_data()
+
+if "selected_day" not in st.session_state:
+    st.session_state.selected_day = None  # Para manter a aba ativa
+
 clean_past_days()
 
 st.title("Voleizinho da Semana 🏐")
@@ -82,40 +87,48 @@ if st.button("Entrar na Lista") and name:
             else:
                 day_data['Substitutos'].append(name)
             st.success(f"{name} adicionado à lista de {selected_day}!")
+            st.session_state.selected_day = selected_day  # Mantém a aba ativa
     
     save_data(st.session_state.volei_agenda)
     st.rerun()
 
 # Exibição de todas as listas abaixo numeradas
-tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_agenda.keys(), start=1)])
-for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
-    with tab:
-        st.text(f"Titulares ({len(data['Titulares'])}/15):")
-        for i, name in enumerate(data['Titulares']):
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Titulares_{name}"):
-                    remove_name(day, name, 'Titulares')
+tabs = list(st.session_state.volei_agenda.keys())
+selected_tab = st.session_state.selected_day or tabs[0]  # Mantém a aba ativa
 
-        st.text(f"Reservas ({len(data['Reservas'])}/3):")
-        for i, name in enumerate(data['Reservas']):
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Reservas_{name}"):
-                    remove_name(day, name, 'Reservas')
+selected_tab_index = tabs.index(selected_tab)
+tab_selection = st.radio("Escolha um dia:", tabs, index=selected_tab_index)
 
-        st.text(f"Substitutos:")
-        for i, name in enumerate(data['Substitutos']):
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.write(f"{i+1}. {name}")
-            with col2:
-                if st.button(f"❌", key=f"remove_{day}_Substitutos_{name}"):
-                    remove_name(day, name, 'Substitutos')
+day_data = st.session_state.volei_agenda[tab_selection]
+
+st.subheader(f"Lista para {tab_selection}")
+
+st.text(f"Titulares ({len(day_data['Titulares'])}/15):")
+for i, name in enumerate(day_data['Titulares']):
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        st.write(f"{i+1}. {name}")
+    with col2:
+        if st.button(f"❌", key=f"remove_{tab_selection}_Titulares_{name}"):
+            remove_name(tab_selection, name, 'Titulares')
+
+st.text(f"Reservas ({len(day_data['Reservas'])}/3):")
+for i, name in enumerate(day_data['Reservas']):
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        st.write(f"{i+1}. {name}")
+    with col2:
+        if st.button(f"❌", key=f"remove_{tab_selection}_Reservas_{name}"):
+            remove_name(tab_selection, name, 'Reservas')
+
+st.text(f"Substitutos:")
+for i, name in enumerate(day_data['Substitutos']):
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        st.write(f"{i+1}. {name}")
+    with col2:
+        if st.button(f"❌", key=f"remove_{tab_selection}_Substitutos_{name}"):
+            remove_name(tab_selection, name, 'Substitutos')
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
