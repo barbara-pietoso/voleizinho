@@ -7,7 +7,7 @@ from datetime import timedelta
 # Configurações da página
 st.set_page_config(
     page_title="VOLEIZINHO PRA CURAR ONDE DÓI",
-    page_icon="	:volleyball:"
+    page_icon=":volleyball:"
 )
 
 # Configurações iniciais
