@@ -48,15 +48,16 @@ tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_age
 for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
     with tab:
         st.text(f"Titulares ({len(data['Titulares'])}/15):")
-        st.write(data['Titulares'])
+        st.write([f"{i+1}. {name}" for i, name in enumerate(data['Titulares'])])
         st.text(f"Reservas ({len(data['Reservas'])}/3):")
-        st.write(data['Reservas'])
+        st.write([f"{i+1}. {name}" for i, name in enumerate(data['Reservas'])])
         st.text(f"Substitutos:")
-        st.write(data['Substitutos'])
+        st.write([f"{i+1}. {name}" for i, name in enumerate(data['Substitutos'])])
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
     init_session()
     st.success("Listas resetadas!")
     st.rerun()
+
 
