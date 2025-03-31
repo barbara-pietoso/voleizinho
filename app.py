@@ -20,7 +20,6 @@ def save_data(data):
     with open(data_file, "w") as f:
         json.dump(data, f, indent=4)
 
-# Função corrigida para obter os dias da semana atual
 def get_current_week_days():
     today = datetime.date.today()
     start_of_week = today - timedelta(days=today.weekday())  # Segunda-feira da semana atual
@@ -42,11 +41,9 @@ def get_current_week_days():
         day_date = current_day.strftime("%d/%m")  # Data formatada
         
         # Define os horários específicos para cada dia
-        if day_name in ["Segunda", "Quarta", "Quinta", "Sábado"]:
-            time_info = "19h - quadra 24" if day_name != "Sábado" else "18h - quadra 24"
-        elif day_name == "Domingo":
+        if day_name in ["Sábado", "Domingo"]:
             time_info = "18h"
-        else:
+        else:  # Segunda a Sexta
             time_info = "19h"
         
         days.append(f"{day_name} {day_date} {time_info}")
@@ -92,7 +89,7 @@ if 'volei_agenda' not in st.session_state:
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
 
 with tab1:
-    st.title("Bem-vindo ao Voleizinho da Semana 🏐")
+    st.title("VOLEIZINHO PRA CURAR ONDE DÓI 🏐")
     st.write("""
     Este aplicativo ajuda a organizar as listas de jogadores para os dias de vôlei da semana.
     
