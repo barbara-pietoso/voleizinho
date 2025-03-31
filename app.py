@@ -90,7 +90,7 @@ def remove_name(day, name, role):
 # Inicializa os dados
 initialize_data()
 
-# Layout principal com abas
+# Layout principal com abas - VERSÃO MODIFICADA
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
 
 with tab1:
@@ -204,6 +204,43 @@ with tab2:
         st.success("Todas as listas foram resetadas!")
         st.rerun()
 
+st.markdown("""
+<style>
+    /* Esconde os elementos que causam o fragmento na URL */
+    .stTabs [data-baseweb="tab-list"] {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# JavaScript avançado para controle de URL
+components.html(f"""
+<script>
+// Função para remover fragmento da URL
+function cleanUrl() {{
+    if(window.location.hash) {{
+        history.replaceState(null, null, window.location.pathname + window.location.search);
+    }}
+}}
+
+// Monitora todas as alterações na página
+const observer = new MutationObserver(function(mutations) {{
+    cleanUrl();
+}});
+
+// Configura o observer
+observer.observe(document.body, {{
+    childList: true,
+    subtree: true,
+    attributes: false,
+    characterData: false
+}});
+
+// Limpa imediatamente ao carregar
+window.addEventListener('load', cleanUrl);
+document.addEventListener('DOMContentLoaded', cleanUrl);
+</script>
+""", height=0)
 
 
 
