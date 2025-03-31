@@ -4,12 +4,12 @@ import json
 import os
 from datetime import timedelta
 
-# Configurações iniciais (mantenha igual)
+# Configurações iniciais
 data_file = "volei_agenda.json"
 quadras_file = "volei_quadras.json"
-QUADRAS_DISPONIVEIS = ["NÃO RESERVADA", "11", "12", "13", "14", "15", "16", "17", "18", "19", "24", "25", "26", "QUADRA COBERTA"]
+QUADRAS_DISPONIVEIS = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "24", "25", "26"]
 
-# Funções de carregamento/salvamento (mantenha igual)
+# Funções de carregamento/salvamento
 def load_data():
     if os.path.exists(data_file):
         with open(data_file, "r") as f:
@@ -30,7 +30,7 @@ def save_quadras(data):
     with open(quadras_file, "w") as f:
         json.dump(data, f, indent=4)
 
-# Função para obter dias da semana (mantenha igual)
+# Função para obter dias da semana
 def get_current_week_days():
     today = datetime.date.today()
     start_of_week = today - timedelta(days=today.weekday())
@@ -47,7 +47,7 @@ def get_current_week_days():
     
     return days
 
-# Inicialização dos dados (mantenha igual)
+# Inicialização dos dados
 def initialize_data():
     week_days = get_current_week_days()
     
@@ -66,7 +66,7 @@ def initialize_data():
             st.session_state.quadras = {day: None for day in week_days}
             save_quadras(st.session_state.quadras)
 
-# Função para remover jogador (mantenha igual)
+# Função para remover jogador
 def remove_name(day, name, role):
     day_data = st.session_state.volei_agenda[day]
     
@@ -94,34 +94,19 @@ initialize_data()
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
 
 with tab1:
-    st.title("VOLEIZINHO PRA CURAR ONDE DÓI 🩹🏐🌈")
+    st.title("Bem-vindo ao Voleizinho da Semana 🏐")
     st.write("""
     **Como usar:**
     - Na aba 'Listas da Semana', selecione os dias que deseja jogar
     - Digite seu nome e clique em 'Entrar na Lista'
-    - Caso você reserve uma quadra, atribua o número dela no respectivo dia da semana.
+    - Atribua uma quadra para cada dia dentro da aba do dia
     - Para sair de uma lista, clique no ❌ ao lado do seu nome
-
-    **Regras do grupo**
-    1) jogamos sempre a partir das listas criadas no grupo; 📝
-
-    2) estabelecemos uma lista de 15 pessoas + 3 reservas para os jogos, mais a lista de substituições, por ordem de preenchimento. 
-    primeiro entram para a lista os "reservas" e conforme for liberando vaga entram os "substitutos", de forma automática, no lugar de pessoas desistentes. 
-    portanto: 🔄
-    reserva: joga revezando
-    substituto: entra para a lista somente conforme as desistências 
-    
-    3) precisamos nos atentar para aqueles que colocam o nome na lista e não comparecem, já que isso prejudica aqueles que querem jogar e estão na lista de espera. lembrem de avisar com antecedência (tolerância de 2x, depois precisaremos tirar do grupo) 🔴
-    
-    4) jogadores de fora só podem entrar na lista caso esteja sobrando lugar NO DIA DO JOGO, dando prioridade aos participantes do grupo.
-    
-    5) com mais frequência será feita uma revisão no grupo, deixando apenas aqueles que estão comparecendo nos jogos com mais assiduidade 👀
     """)
 
 with tab2:
     st.title("Listas da Semana 🏐")
     
-    # Seção para adicionar jogadores (mantida no topo)
+    # Seção para adicionar jogadores
     st.subheader("Adicionar Jogador")
     days_selected = st.multiselect(
         "Escolha os dias para jogar:",
@@ -146,18 +131,21 @@ with tab2:
         save_data(st.session_state.volei_agenda)
         st.rerun()
     
-    # Exibição das listas por dia com seção de quadra DENTRO de cada aba
-    tabs = st.tabs([f"{day.split()[0]}" for day in st.session_state.volei_agenda.keys()])
+    # Exibição das listas por dia
+    tab_labels = [day.split()[0] for day in st.session_state.volei_agenda.keys()]
+    tabs = st.tabs(tab_labels)
     
     for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
         with tab:
-            # Seção para selecionar quadra DENTRO da aba do dia
+            day_name = day.split()[0]
+            
+            # Seção para selecionar quadra
             current_quadra = st.session_state.quadras.get(day)
             quadra = st.selectbox(
                 "Selecione a quadra:",
                 options=["Selecione"] + QUADRAS_DISPONIVEIS,
                 index=0 if current_quadra is None else QUADRAS_DISPONIVEIS.index(current_quadra) + 1,
-                key=f"quadra_select_{day}"
+                key=f"quadra_{day_name}"
             )
             
             if quadra != "Selecione" and quadra != current_quadra:
@@ -169,29 +157,29 @@ with tab2:
             
             st.markdown(f"**{day} - Quadra: {st.session_state.quadras.get(day, 'Não definida')}**")
             
-            # Listas de jogadores (mantido igual)
+            # Listas de jogadores
             st.write(f"**Titulares ({len(data['Titulares'])}/15):**")
             for i, name in enumerate(data['Titulares']):
                 cols = st.columns([4, 1])
                 cols[0].write(f"{i+1}. {name}")
-                if cols[1].button("❌", key=f"rem_tit_{day}_{name}"):
+                if cols[1].button("❌", key=f"rem_tit_{day_name}_{name}"):
                     remove_name(day, name, 'Titulares')
             
             st.write(f"**Reservas ({len(data['Reservas'])}/3):**")
             for i, name in enumerate(data['Reservas']):
                 cols = st.columns([4, 1])
                 cols[0].write(f"{i+1}. {name}")
-                if cols[1].button("❌", key=f"rem_res_{day}_{name}"):
+                if cols[1].button("❌", key=f"rem_res_{day_name}_{name}"):
                     remove_name(day, name, 'Reservas')
             
             st.write("**Substitutos:**")
             for i, name in enumerate(data['Substitutos']):
                 cols = st.columns([4, 1])
                 cols[0].write(f"{i+1}. {name}")
-                if cols[1].button("❌", key=f"rem_sub_{day}_{name}"):
+                if cols[1].button("❌", key=f"rem_sub_{day_name}_{name}"):
                     remove_name(day, name, 'Substitutos')
 
-    # Botão de reset (mantido igual)
+    # Botão de reset
     if st.button("Resetar Todas as Listas (Apenas Admin)"):
         st.session_state.volei_agenda = {}
         st.session_state.quadras = {}
