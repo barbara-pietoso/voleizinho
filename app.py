@@ -94,13 +94,28 @@ initialize_data()
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
 
 with tab1:
-    st.title("Bem-vindo ao Voleizinho da Semana 🏐")
+    st.title("VOLEIZINHO PRA CURAR ONDE DÓI 🩹🏐🌈")
     st.write("""
     **Como usar:**
     - Na aba 'Listas da Semana', selecione os dias que deseja jogar
     - Digite seu nome e clique em 'Entrar na Lista'
-    - Atribua uma quadra para cada dia dentro da aba do dia
+    - Caso você reserve uma quadra, atribua o número dela no respectivo dia da semana.
     - Para sair de uma lista, clique no ❌ ao lado do seu nome
+
+    **Regras do grupo**
+    1) jogamos sempre a partir das listas criadas no grupo; 📝
+
+    2) estabelecemos uma lista de 15 pessoas + 3 reservas para os jogos, mais a lista de substituições, por ordem de preenchimento. 
+    primeiro entram para a lista os "reservas" e conforme for liberando vaga entram os "substitutos", de forma automática, no lugar de pessoas desistentes. 
+    portanto: 🔄
+    reserva: joga revezando
+    substituto: entra para a lista somente conforme as desistências 
+    
+    3) precisamos nos atentar para aqueles que colocam o nome na lista e não comparecem, já que isso prejudica aqueles que querem jogar e estão na lista de espera. lembrem de avisar com antecedência (tolerância de 2x, depois precisaremos tirar do grupo) 🔴
+    
+    4) jogadores de fora só podem entrar na lista caso esteja sobrando lugar NO DIA DO JOGO, dando prioridade aos participantes do grupo.
+    
+    5) com mais frequência será feita uma revisão no grupo, deixando apenas aqueles que estão comparecendo nos jogos com mais assiduidade 👀
     """)
 
 with tab2:
