@@ -44,18 +44,19 @@ if st.button("Entrar na Lista") and name:
     st.rerun()
 
 # Exibição de todas as listas abaixo numeradas
-st.subheader("Listas da Semana")
-for i, (day, data) in enumerate(st.session_state.volei_agenda.items(), start=1):
-    st.markdown(f"### {i}. {day}")
-    st.text(f"Titulares ({len(data['Titulares'])}/15):")
-    st.write(data['Titulares'])
-    st.text(f"Reservas ({len(data['Reservas'])}/3):")
-    st.write(data['Reservas'])
-    st.text(f"Substitutos:")
-    st.write(data['Substitutos'])
+tabs = st.tabs([f"{i}. {day}" for i, day in enumerate(st.session_state.volei_agenda.keys(), start=1)])
+for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
+    with tab:
+        st.text(f"Titulares ({len(data['Titulares'])}/15):")
+        st.write(data['Titulares'])
+        st.text(f"Reservas ({len(data['Reservas'])}/3):")
+        st.write(data['Reservas'])
+        st.text(f"Substitutos:")
+        st.write(data['Substitutos'])
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
     init_session()
     st.success("Listas resetadas!")
     st.rerun()
+
