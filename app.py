@@ -76,26 +76,32 @@ for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
         st.text(f"Titulares ({len(data['Titulares'])}/15):")
         for i, name in enumerate(data['Titulares']):
             # Adiciona o botão de remoção ao lado do nome com key única
-            remove_button = st.button(f"❌", key=f"remove_{day}_Titulares_{name}", use_container_width=False)
-            if remove_button:
-                remove_name(day, name, 'Titulares')
-            st.write(f"{i+1}. {name}")
+            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
+            with col1:
+                st.write(f"{i+1}. {name}")
+            with col2:
+                if st.button(f"❌", key=f"remove_{day}_Titulares_{name}"):
+                    remove_name(day, name, 'Titulares')
 
         st.text(f"Reservas ({len(data['Reservas'])}/3):")
         for i, name in enumerate(data['Reservas']):
             # Adiciona o botão de remoção ao lado do nome com key única
-            remove_button = st.button(f"❌", key=f"remove_{day}_Reservas_{name}", use_container_width=False)
-            if remove_button:
-                remove_name(day, name, 'Reservas')
-            st.write(f"{i+1}. {name}")
+            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
+            with col1:
+                st.write(f"{i+1}. {name}")
+            with col2:
+                if st.button(f"❌", key=f"remove_{day}_Reservas_{name}"):
+                    remove_name(day, name, 'Reservas')
 
         st.text(f"Substitutos:")
         for i, name in enumerate(data['Substitutos']):
             # Adiciona o botão de remoção ao lado do nome com key única
-            remove_button = st.button(f"❌", key=f"remove_{day}_Substitutos_{name}", use_container_width=False)
-            if remove_button:
-                remove_name(day, name, 'Substitutos')
-            st.write(f"{i+1}. {name}")
+            col1, col2 = st.columns([6, 1])  # Coluna maior para o nome e menor para o botão
+            with col1:
+                st.write(f"{i+1}. {name}")
+            with col2:
+                if st.button(f"❌", key=f"remove_{day}_Substitutos_{name}"):
+                    remove_name(day, name, 'Substitutos')
 
 # Botão de reset (visível só para o administrador)
 if st.button("Resetar Semana (Apenas Admin)"):
@@ -104,27 +110,4 @@ if st.button("Resetar Semana (Apenas Admin)"):
     st.success("Listas resetadas!")
     st.rerun()
 
-# Adicionando o estilo customizado (botões pequenos e ao lado)
-st.markdown("""
-    <style>
-        .stButton > button {
-            font-size: 14px;
-            padding: 2px 6px;
-            margin-left: 10px;
-            background-color: #FF4B4B;
-            color: white;
-            border-radius: 3px;
-        }
-        .stButton > button:hover {
-            background-color: #FF0000;
-        }
-        .stText > div {
-            display: flex;
-            align-items: center;
-        }
-        .stText > div > p {
-            margin-right: 8px;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
