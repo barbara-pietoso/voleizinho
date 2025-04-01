@@ -141,7 +141,8 @@ with tab2:
     st.subheader("Adicionar Jogador")
     days_selected = st.multiselect(
         "Escolha os dias para jogar:",
-        options=list(st.session_state.volei_agenda.keys())
+        options=list(st.session_state.volei_agenda.keys()
+                    ))
     
     name = st.text_input("Seu nome:")
     if st.button("Entrar na Lista") and name:
