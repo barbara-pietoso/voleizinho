@@ -93,6 +93,14 @@ def remove_name(day, name, role):
         st.success(f"{name} removido e lista reorganizada para {day}!")
         st.rerun()
 
+# Função para remover quadra
+def remove_quadra(day):
+    st.session_state.quadras[day] = None
+    st.session_state.volei_agenda[day]['Quadra'] = None
+    save_quadras(st.session_state.quadras)
+    save_data(st.session_state.volei_agenda)
+    st.rerun()
+
 # Inicializa os dados
 initialize_data()
 
@@ -134,7 +142,6 @@ with tab2:
     days_selected = st.multiselect(
         "Escolha os dias para jogar:",
         options=list(st.session_state.volei_agenda.keys())
-    )
     
     name = st.text_input("Seu nome:")
     if st.button("Entrar na Lista") and name:
@@ -161,46 +168,58 @@ with tab2:
     for tab, (day, data) in zip(tabs, st.session_state.volei_agenda.items()):
         with tab:
             day_name = day.split()[0]
-            
-            # Seção para selecionar quadra
             current_quadra = st.session_state.quadras.get(day)
-            quadra = st.selectbox(
-                "Selecione a quadra:",
-                options=["Selecione"] + QUADRAS_DISPONIVEIS,
-                index=0 if current_quadra is None else QUADRAS_DISPONIVEIS.index(current_quadra) + 1,
-                key=f"quadra_{day_name}"
-            )
             
-            if quadra != "Selecione" and quadra != current_quadra:
-                st.session_state.quadras[day] = quadra
-                st.session_state.volei_agenda[day]['Quadra'] = quadra
-                save_quadras(st.session_state.quadras)
-                save_data(st.session_state.volei_agenda)
-                st.rerun()
+            # Layout com duas colunas: Listas e Quadra
+            col1, col2 = st.columns([3, 1])
             
-            st.markdown(f"**{day} - Quadra: {st.session_state.quadras.get(day, 'Não definida')}**")
+            with col1:
+                st.markdown(f"**{day}**")
+                
+                # Listas de jogadores
+                st.write(f"**Titulares ({len(data['Titulares'])}/15):**")
+                for i, name in enumerate(data['Titulares']):
+                    cols = st.columns([4, 1])
+                    cols[0].write(f"{i+1}. {name}")
+                    if cols[1].button("❌", key=f"rem_tit_{day_name}_{name}"):
+                        remove_name(day, name, 'Titulares')
+                
+                st.write(f"**Reservas ({len(data['Reservas'])}/3):**")
+                for i, name in enumerate(data['Reservas']):
+                    cols = st.columns([4, 1])
+                    cols[0].write(f"{i+1}. {name}")
+                    if cols[1].button("❌", key=f"rem_res_{day_name}_{name}"):
+                        remove_name(day, name, 'Reservas')
+                
+                st.write("**Substitutos:**")
+                for i, name in enumerate(data['Substitutos']):
+                    cols = st.columns([4, 1])
+                    cols[0].write(f"{i+1}. {name}")
+                    if cols[1].button("❌", key=f"rem_sub_{day_name}_{name}"):
+                        remove_name(day, name, 'Substitutos')
             
-            # Listas de jogadores
-            st.write(f"**Titulares ({len(data['Titulares'])}/15):**")
-            for i, name in enumerate(data['Titulares']):
-                cols = st.columns([4, 1])
-                cols[0].write(f"{i+1}. {name}")
-                if cols[1].button("❌", key=f"rem_tit_{day_name}_{name}"):
-                    remove_name(day, name, 'Titulares')
-            
-            st.write(f"**Reservas ({len(data['Reservas'])}/3):**")
-            for i, name in enumerate(data['Reservas']):
-                cols = st.columns([4, 1])
-                cols[0].write(f"{i+1}. {name}")
-                if cols[1].button("❌", key=f"rem_res_{day_name}_{name}"):
-                    remove_name(day, name, 'Reservas')
-            
-            st.write("**Substitutos:**")
-            for i, name in enumerate(data['Substitutos']):
-                cols = st.columns([4, 1])
-                cols[0].write(f"{i+1}. {name}")
-                if cols[1].button("❌", key=f"rem_sub_{day_name}_{name}"):
-                    remove_name(day, name, 'Substitutos')
+            with col2:
+                st.markdown("**Quadra**")
+                quadra_container = st.container()
+                
+                if current_quadra:
+                    quadra_container.write(f"Quadra selecionada: **{current_quadra}**")
+                    if st.button("❌ Remover", key=f"remove_quadra_{day_name}"):
+                        remove_quadra(day)
+                else:
+                    quadra_selecionada = st.selectbox(
+                        "Selecione a quadra:",
+                        options=[""] + QUADRAS_DISPONIVEIS,
+                        index=0,
+                        key=f"quadra_select_{day_name}"
+                    )
+                    
+                    if quadra_selecionada and st.button("Selecionar", key=f"select_quadra_{day_name}"):
+                        st.session_state.quadras[day] = quadra_selecionada
+                        st.session_state.volei_agenda[day]['Quadra'] = quadra_selecionada
+                        save_quadras(st.session_state.quadras)
+                        save_data(st.session_state.volei_agenda)
+                        st.rerun()
 
     # Botão de reset
     if st.button("Resetar Todas as Listas (Apenas Admin)"):
@@ -209,7 +228,6 @@ with tab2:
         initialize_data()
         st.success("Todas as listas foram resetadas!")
         st.rerun()
-
 
 
 
