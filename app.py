@@ -209,7 +209,7 @@ with tab2:
                         remove_quadra(day)
                 else:
                     quadra_selecionada = st.selectbox(
-                        "Selecione a quadra:",
+                        "Selecione a quadra (quando ela já estiver reservada):",
                         options=[""] + QUADRAS_DISPONIVEIS,
                         index=0,
                         key=f"quadra_select_{day_name}"
