@@ -53,24 +53,60 @@ def get_current_week_days():
     
     return days
 
+# Função para verificar se precisa resetar (domingo após 19h)
+def should_reset():
+    now = datetime.datetime.now()
+    # Verifica se é domingo e após 19h
+    if now.weekday() == 6 and now.hour >= 19:
+        # Verifica se já resetamos hoje
+        last_reset_file = "last_reset_date.txt"
+        today_date = now.date().isoformat()
+        
+        if os.path.exists(last_reset_file):
+            with open(last_reset_file, "r") as f:
+                last_reset = f.read().strip()
+            if last_reset == today_date:
+                return False
+        
+        # Se chegou aqui, precisa resetar
+        with open(last_reset_file, "w") as f:
+            f.write(today_date)
+        return True
+    return False
+
+# Função para resetar os dados
+def reset_week_data():
+    week_days = get_current_week_days()
+    st.session_state.volei_agenda = {
+        day: {'Titulares': [], 'Reservas': [], 'Substitutos': [], 'Quadra': None}
+        for day in week_days
+    }
+    st.session_state.quadras = {day: None for day in week_days}
+    save_data(st.session_state.volei_agenda)
+    save_quadras(st.session_state.quadras)
+
 # Inicialização dos dados
 def initialize_data():
-    week_days = get_current_week_days()
-    
-    if 'volei_agenda' not in st.session_state:
-        st.session_state.volei_agenda = load_data()
-        if not st.session_state.volei_agenda:
-            st.session_state.volei_agenda = {
-                day: {'Titulares': [], 'Reservas': [], 'Substitutos': [], 'Quadra': None}
-                for day in week_days
-            }
-            save_data(st.session_state.volei_agenda)
-    
-    if 'quadras' not in st.session_state:
-        st.session_state.quadras = load_quadras()
-        if not st.session_state.quadras:
-            st.session_state.quadras = {day: None for day in week_days}
-            save_quadras(st.session_state.quadras)
+    # Verifica se precisa resetar antes de carregar
+    if should_reset():
+        reset_week_data()
+    else:
+        week_days = get_current_week_days()
+        
+        if 'volei_agenda' not in st.session_state:
+            st.session_state.volei_agenda = load_data()
+            if not st.session_state.volei_agenda:
+                st.session_state.volei_agenda = {
+                    day: {'Titulares': [], 'Reservas': [], 'Substitutos': [], 'Quadra': None}
+                    for day in week_days
+                }
+                save_data(st.session_state.volei_agenda)
+        
+        if 'quadras' not in st.session_state:
+            st.session_state.quadras = load_quadras()
+            if not st.session_state.quadras:
+                st.session_state.quadras = {day: None for day in week_days}
+                save_quadras(st.session_state.quadras)
 
 # Função para remover jogador
 def remove_name(day, name, role):
@@ -104,7 +140,7 @@ def remove_quadra(day):
 # Inicializa os dados
 initialize_data()
 
-# Layout principal com abas - VERSÃO MODIFICADA
+# Layout principal com abas
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
 
 with tab1:
@@ -132,6 +168,8 @@ with tab1:
      4) jogadores de fora só podem entrar na lista caso esteja sobrando lugar NO DIA DO JOGO, dando prioridade aos participantes do grupo.
      
      5) com mais frequência será feita uma revisão no grupo, deixando apenas aqueles que estão comparecendo nos jogos com mais assiduidade 👀
+     
+     **OBS:** As listas são resetadas automaticamente todo domingo às 19h.
     """)
 
 with tab2:
@@ -141,8 +179,7 @@ with tab2:
     st.subheader("Adicionar Jogador")
     days_selected = st.multiselect(
         "Escolha os dias para jogar:",
-        options=list(st.session_state.volei_agenda.keys()
-                    ))
+        options=list(st.session_state.volei_agenda.keys())
     
     name = st.text_input("Seu nome:")
     if st.button("Entrar na Lista") and name:
@@ -209,7 +246,7 @@ with tab2:
                         remove_quadra(day)
                 else:
                     quadra_selecionada = st.selectbox(
-                        "Selecione a quadra (quando ela já estiver reservada):",
+                        "Selecione a quadra:",
                         options=[""] + QUADRAS_DISPONIVEIS,
                         index=0,
                         key=f"quadra_select_{day_name}"
@@ -222,11 +259,9 @@ with tab2:
                         save_data(st.session_state.volei_agenda)
                         st.rerun()
 
-    # Botão de reset
+    # Botão de reset manual (apenas para admin)
     if st.button("Resetar Todas as Listas (Apenas Admin)"):
-        st.session_state.volei_agenda = {}
-        st.session_state.quadras = {}
-        initialize_data()
+        reset_week_data()
         st.success("Todas as listas foram resetadas!")
         st.rerun()
 
