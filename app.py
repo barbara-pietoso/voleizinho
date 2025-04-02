@@ -206,18 +206,18 @@ with tab2:
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_tit_{day_name}_{name}"):
-                        st.session_state[f"confirm_rem_tit_{day_name}_{name}"] = True
-                        st.rerun()
+                        st.session_state[f"show_confirm_tit_{day_name}_{name}"] = True
                 
-                # Mostrar popover de confirmação se necessário
-                for name in data['Titulares']:
-                    if st.session_state.get(f"confirm_rem_tit_{day_name}_{name}"):
+                # Popover de confirmação para titulares
+                for i, name in enumerate(data['Titulares']):
+                    if st.session_state.get(f"show_confirm_tit_{day_name}_{name}"):
                         with st.popover(f"Confirmar remoção de {name}"):
                             st.write(f"Tem certeza que deseja remover {name} dos titulares?")
                             if st.button("Sim", key=f"confirm_yes_tit_{day_name}_{name}"):
                                 remove_name(day, name, 'Titulares')
+                                del st.session_state[f"show_confirm_tit_{day_name}_{name}"]
                             if st.button("Cancelar", key=f"confirm_no_tit_{day_name}_{name}"):
-                                del st.session_state[f"confirm_rem_tit_{day_name}_{name}"]
+                                del st.session_state[f"show_confirm_tit_{day_name}_{name}"]
                                 st.rerun()
                 
                 st.write(f"**Reservas ({len(data['Reservas'])}/3):**")
@@ -225,17 +225,17 @@ with tab2:
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_res_{day_name}_{name}"):
-                        st.session_state[f"confirm_rem_res_{day_name}_{name}"] = True
-                        st.rerun()
+                        st.session_state[f"show_confirm_res_{day_name}_{name}"] = True
                 
-                for name in data['Reservas']:
-                    if st.session_state.get(f"confirm_rem_res_{day_name}_{name}"):
+                for i, name in enumerate(data['Reservas']):
+                    if st.session_state.get(f"show_confirm_res_{day_name}_{name}"):
                         with st.popover(f"Confirmar remoção de {name}"):
                             st.write(f"Tem certeza que deseja remover {name} dos reservas?")
                             if st.button("Sim", key=f"confirm_yes_res_{day_name}_{name}"):
                                 remove_name(day, name, 'Reservas')
+                                del st.session_state[f"show_confirm_res_{day_name}_{name}"]
                             if st.button("Cancelar", key=f"confirm_no_res_{day_name}_{name}"):
-                                del st.session_state[f"confirm_rem_res_{day_name}_{name}"]
+                                del st.session_state[f"show_confirm_res_{day_name}_{name}"]
                                 st.rerun()
                 
                 st.write("**Substitutos:**")
@@ -243,17 +243,17 @@ with tab2:
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_sub_{day_name}_{name}"):
-                        st.session_state[f"confirm_rem_sub_{day_name}_{name}"] = True
-                        st.rerun()
+                        st.session_state[f"show_confirm_sub_{day_name}_{name}"] = True
                 
-                for name in data['Substitutos']:
-                    if st.session_state.get(f"confirm_rem_sub_{day_name}_{name}"):
+                for i, name in enumerate(data['Substitutos']):
+                    if st.session_state.get(f"show_confirm_sub_{day_name}_{name}"):
                         with st.popover(f"Confirmar remoção de {name}"):
                             st.write(f"Tem certeza que deseja remover {name} dos substitutos?")
                             if st.button("Sim", key=f"confirm_yes_sub_{day_name}_{name}"):
                                 remove_name(day, name, 'Substitutos')
+                                del st.session_state[f"show_confirm_sub_{day_name}_{name}"]
                             if st.button("Cancelar", key=f"confirm_no_sub_{day_name}_{name}"):
-                                del st.session_state[f"confirm_rem_sub_{day_name}_{name}"]
+                                del st.session_state[f"show_confirm_sub_{day_name}_{name}"]
                                 st.rerun()
             
             with col2:
@@ -262,16 +262,16 @@ with tab2:
                 if current_quadra:
                     st.write(f"Quadra selecionada: **{current_quadra}**")
                     if st.button("❌ Remover", key=f"remove_quadra_{day_name}"):
-                        st.session_state[f"confirm_rem_quadra_{day_name}"] = True
-                        st.rerun()
+                        st.session_state[f"show_confirm_quadra_{day_name}"] = True
                     
-                    if st.session_state.get(f"confirm_rem_quadra_{day_name}"):
-                        with st.popover(f"Confirmar remoção da quadra {current_quadra}"):
+                    if st.session_state.get(f"show_confirm_quadra_{day_name}"):
+                        with st.popover(f"Confirmar remoção da quadra"):
                             st.write("Tem certeza que deseja remover esta quadra?")
                             if st.button("Sim", key=f"confirm_yes_quadra_{day_name}"):
                                 remove_quadra(day)
+                                del st.session_state[f"show_confirm_quadra_{day_name}"]
                             if st.button("Cancelar", key=f"confirm_no_quadra_{day_name}"):
-                                del st.session_state[f"confirm_rem_quadra_{day_name}"]
+                                del st.session_state[f"show_confirm_quadra_{day_name}"]
                                 st.rerun()
                 else:
                     quadra_selecionada = st.selectbox(
@@ -290,17 +290,16 @@ with tab2:
 
     # Botão de reset manual com confirmação
     if st.button("Resetar Todas as Listas (Apenas Admin)", key="botao_reset_admin"):
-        st.session_state['confirm_reset'] = True
+        st.session_state['show_confirm_reset'] = True
     
-    if st.session_state.get('confirm_reset'):
+    if st.session_state.get('show_confirm_reset'):
         with st.popover("Confirmar reset"):
             st.warning("Tem certeza que deseja resetar TODAS as listas?")
             if st.button("Sim, resetar tudo", key="confirm_reset_sim"):
                 reset_week_data()
-                st.session_state['confirm_reset'] = False
+                st.session_state['show_confirm_reset'] = False
                 st.rerun()
             if st.button("Cancelar", key="confirm_reset_nao"):
-                st.session_state['confirm_reset'] = False
+                st.session_state['show_confirm_reset'] = False
                 st.rerun()
-
 
