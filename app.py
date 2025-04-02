@@ -53,7 +53,56 @@ def get_current_week_days():
     
     return days
 
-# [...] (mantenha as outras funções como should_reset, reset_week_data, initialize_data, etc.)
+# Função para verificar se precisa resetar (domingo após 19h)
+def should_reset():
+    now = datetime.datetime.now()
+    if now.weekday() == 6 and now.hour >= 19:  # Domingo é 6
+        last_reset_file = "last_reset_date.txt"
+        today_date = now.date().isoformat()
+        
+        if os.path.exists(last_reset_file):
+            with open(last_reset_file, "r") as f:
+                last_reset = f.read().strip()
+            if last_reset == today_date:
+                return False
+        
+        with open(last_reset_file, "w") as f:
+            f.write(today_date)
+        return True
+    return False
+
+# Função para resetar os dados
+def reset_week_data():
+    week_days = get_current_week_days()
+    st.session_state.volei_agenda = {
+        day: {'Titulares': [], 'Reservas': [], 'Substitutos': [], 'Quadra': None}
+        for day in week_days
+    }
+    st.session_state.quadras = {day: None for day in week_days}
+    save_data(st.session_state.volei_agenda)
+    save_quadras(st.session_state.quadras)
+
+# Inicialização dos dados
+def initialize_data():
+    if should_reset():
+        reset_week_data()
+    else:
+        week_days = get_current_week_days()
+        
+        if 'volei_agenda' not in st.session_state:
+            st.session_state.volei_agenda = load_data()
+            if not st.session_state.volei_agenda:
+                st.session_state.volei_agenda = {
+                    day: {'Titulares': [], 'Reservas': [], 'Substitutos': [], 'Quadra': None}
+                    for day in week_days
+                }
+                save_data(st.session_state.volei_agenda)
+        
+        if 'quadras' not in st.session_state:
+            st.session_state.quadras = load_quadras()
+            if not st.session_state.quadras:
+                st.session_state.quadras = {day: None for day in week_days}
+                save_quadras(st.session_state.quadras)
 
 # Função para remover jogador
 def remove_name(day, name, role):
@@ -76,7 +125,7 @@ def remove_name(day, name, role):
         st.success(f"{name} removido e lista reorganizada para {day}!")
         st.rerun()
 
-# Inicializa os dados
+# Agora que todas as funções estão definidas, podemos inicializar os dados
 initialize_data()
 
 # Layout principal com abas
@@ -90,7 +139,49 @@ with tab1:
     - Digite seu nome e clique em 'Entrar na Lista'
     - Atribua uma quadra para cada dia dentro da aba do dia
     - Para sair de uma lista, clique no ❌ ao lado do seu nome
+
+    **Regras do grupo**
+    1) jogamos sempre a partir das listas criadas, ou seja, priorizando os jogadores do grupo; 📝
+
+    2) estabelecemos uma lista de 15 pessoas + 3 reservas para os jogos, mais a lista de substituições, por ordem de preenchimento. 
+    primeiro entram para a lista os "reservas" e conforme for liberando vaga entram os "substitutos", de forma automática, no lugar de pessoas desistentes. 
+    
+    PORTANTO: 🔄
+    reserva: joga revezando
+    substituto: entra para a lista somente conforme as desistências 
+    
+    3) precisamos nos atentar para aqueles que colocam o nome na lista e não comparecem, já que isso prejudica aqueles que querem jogar e estão na lista de espera. lembrem de avisar com antecedência (tolerância de 2x, depois precisaremos tirar do grupo) 🔴
+    
+    4) jogadores de fora do grupo só podem entrar na lista caso esteja sobrando lugar até o dia do jogo, dando prioridade aos participantes do grupo 🫵🏼
     """)
+
+with tab2:
+    st.title("Listas da Semana 🏐")
+    
+    # Seção para adicionar jogadores
+    st.subheader("Adicionar Jogador")
+    days_selected = st.multiselect(
+        "Escolha os dias para jogar:",
+        options=list(st.session_state.volei_agenda.keys())
+    )
+    
+    name = st.text_input("Seu nome:")
+    if st.button("Entrar na Lista") and name:
+        for day in days_selected:
+            day_data = st.session_state.volei_agenda[day]
+            if name in day_data['Titulares'] + day_data['Reservas'] + day_data['Substitutos']:
+                st.warning(f"Você já está na lista de {day}!")
+            else:
+                if len(day_data['Titulares']) < 15:
+                    day_data['Titulares'].append(name)
+                elif len(day_data['Reservas']) < 3:
+                    day_data['Reservas'].append(name)
+                else:
+                    day_data['Substitutos'].append(name)
+                st.success(f"{name} adicionado à lista de {day}!")
+        
+        save_data(st.session_state.volei_agenda)
+        st.rerun()
 
 with tab2:
     st.title("Listas da Semana 🏐")
