@@ -56,7 +56,7 @@ def get_current_week_days():
 # Função para verificar se precisa resetar (domingo após 19h)
 def should_reset():
     now = datetime.datetime.now()
-    if now.weekday() == 6 and now.hour >= 19:  # Domingo é 6
+    if now.weekday() == 6 and now.hour >= 19:
         last_reset_file = "last_reset_date.txt"
         today_date = now.date().isoformat()
         
@@ -104,7 +104,22 @@ def initialize_data():
                 st.session_state.quadras = {day: None for day in week_days}
                 save_quadras(st.session_state.quadras)
 
-# Função para remover jogador
+# Função para remover jogador com confirmação
+def confirm_remove_name(day, name, role):
+    if f"confirm_remove_{day}_{name}_{role}" not in st.session_state:
+        st.session_state[f"confirm_remove_{day}_{name}_{role}"] = True
+        st.rerun()
+    
+    with st.popover(f"Confirmar remoção de {name}", use_container_width=True):
+        st.write(f"Tem certeza que deseja remover {name} da lista de {role.lower()} de {day}?")
+        col1, col2 = st.columns(2)
+        if col1.button("Sim, remover", key=f"confirm_yes_{day}_{name}_{role}"):
+            remove_name(day, name, role)
+        if col2.button("Cancelar", key=f"confirm_no_{day}_{name}_{role}"):
+            st.session_state[f"confirm_remove_{day}_{name}_{role}"] = False
+            st.rerun()
+
+# Função para remover jogador (ação real)
 def remove_name(day, name, role):
     day_data = st.session_state.volei_agenda[day]
     
@@ -125,7 +140,30 @@ def remove_name(day, name, role):
         st.success(f"{name} removido e lista reorganizada para {day}!")
         st.rerun()
 
-# Agora que todas as funções estão definidas, podemos inicializar os dados
+# Função para remover quadra com confirmação
+def confirm_remove_quadra(day):
+    if f"confirm_remove_quadra_{day}" not in st.session_state:
+        st.session_state[f"confirm_remove_quadra_{day}"] = True
+        st.rerun()
+    
+    with st.popover("Confirmar remoção de quadra", use_container_width=True):
+        st.write(f"Tem certeza que deseja remover a quadra {st.session_state.quadras.get(day)} de {day}?")
+        col1, col2 = st.columns(2)
+        if col1.button("Sim, remover", key=f"confirm_yes_quadra_{day}"):
+            remove_quadra(day)
+        if col2.button("Cancelar", key=f"confirm_no_quadra_{day}"):
+            st.session_state[f"confirm_remove_quadra_{day}"] = False
+            st.rerun()
+
+# Função para remover quadra (ação real)
+def remove_quadra(day):
+    st.session_state.quadras[day] = None
+    st.session_state.volei_agenda[day]['Quadra'] = None
+    save_quadras(st.session_state.quadras)
+    save_data(st.session_state.volei_agenda)
+    st.rerun()
+
+# Inicializa os dados
 initialize_data()
 
 # Layout principal com abas
@@ -147,7 +185,9 @@ with tab1:
     primeiro entram para a lista os "reservas" e conforme for liberando vaga entram os "substitutos", de forma automática, no lugar de pessoas desistentes. 
     
     PORTANTO: 🔄
+    
     reserva: joga revezando
+    
     substituto: entra para a lista somente conforme as desistências 
     
     3) precisamos nos atentar para aqueles que colocam o nome na lista e não comparecem, já que isso prejudica aqueles que querem jogar e estão na lista de espera. lembrem de avisar com antecedência (tolerância de 2x, depois precisaremos tirar do grupo) 🔴
@@ -162,39 +202,13 @@ with tab2:
     st.subheader("Adicionar Jogador")
     days_selected = st.multiselect(
         "Escolha os dias para jogar:",
-        options=list(st.session_state.volei_agenda.keys())
+        options=list(st.session_state.volei_agenda.keys()),
+        key="multiselect_dias_jogar"
     )
     
-    name = st.text_input("Seu nome:")
-    if st.button("Entrar na Lista") and name:
-        for day in days_selected:
-            day_data = st.session_state.volei_agenda[day]
-            if name in day_data['Titulares'] + day_data['Reservas'] + day_data['Substitutos']:
-                st.warning(f"Você já está na lista de {day}!")
-            else:
-                if len(day_data['Titulares']) < 15:
-                    day_data['Titulares'].append(name)
-                elif len(day_data['Reservas']) < 3:
-                    day_data['Reservas'].append(name)
-                else:
-                    day_data['Substitutos'].append(name)
-                st.success(f"{name} adicionado à lista de {day}!")
-        
-        save_data(st.session_state.volei_agenda)
-        st.rerun()
-
-with tab2:
-    st.title("Listas da Semana 🏐")
+    name = st.text_input("Seu nome:", key="input_nome_jogador")
     
-    # Seção para adicionar jogadores
-    st.subheader("Adicionar Jogador")
-    days_selected = st.multiselect(
-        "Escolha os dias para jogar:",
-        options=list(st.session_state.volei_agenda.keys())
-    )
-    
-    name = st.text_input("Seu nome:")
-    if st.button("Entrar na Lista") and name:
+    if st.button("Entrar na Lista", key="botao_entrar_lista") and name:
         for day in days_selected:
             day_data = st.session_state.volei_agenda[day]
             if name in day_data['Titulares'] + day_data['Reservas'] + day_data['Substitutos']:
@@ -232,34 +246,29 @@ with tab2:
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_tit_{day_name}_{name}"):
-                        remove_name(day, name, 'Titulares')
+                        confirm_remove_name(day, name, 'Titulares')
                 
                 st.write(f"**Reservas ({len(data['Reservas'])}/3):**")
                 for i, name in enumerate(data['Reservas']):
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_res_{day_name}_{name}"):
-                        remove_name(day, name, 'Reservas')
+                        confirm_remove_name(day, name, 'Reservas')
                 
                 st.write("**Substitutos:**")
                 for i, name in enumerate(data['Substitutos']):
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_sub_{day_name}_{name}"):
-                        remove_name(day, name, 'Substitutos')
+                        confirm_remove_name(day, name, 'Substitutos')
             
             with col2:
                 st.markdown("**Quadra**")
-                quadra_container = st.container()
                 
                 if current_quadra:
-                    quadra_container.write(f"Quadra selecionada: **{current_quadra}**")
+                    st.write(f"Quadra selecionada: **{current_quadra}**")
                     if st.button("❌ Remover", key=f"remove_quadra_{day_name}"):
-                        st.session_state.quadras[day] = None
-                        st.session_state.volei_agenda[day]['Quadra'] = None
-                        save_quadras(st.session_state.quadras)
-                        save_data(st.session_state.volei_agenda)
-                        st.rerun()
+                        confirm_remove_quadra(day)
                 else:
                     quadra_selecionada = st.selectbox(
                         "Selecione a quadra:",
@@ -275,13 +284,21 @@ with tab2:
                         save_data(st.session_state.volei_agenda)
                         st.rerun()
 
-    # Botão de reset
-    if st.button("Resetar Todas as Listas (Apenas Admin)"):
-        st.session_state.volei_agenda = {}
-        st.session_state.quadras = {}
-        initialize_data()
-        st.success("Todas as listas foram resetadas!")
-        st.rerun()
+    # Botão de reset manual com confirmação
+    if st.button("Resetar Todas as Listas (Apenas Admin)", key="botao_reset_admin"):
+        st.session_state['confirming_reset'] = True
+    
+    if st.session_state.get('confirming_reset'):
+        with st.popover("Confirmar reset", use_container_width=True):
+            st.write("Tem certeza que deseja resetar TODAS as listas?")
+            col1, col2 = st.columns(2)
+            if col1.button("Sim, resetar tudo", key="confirm_reset_sim"):
+                reset_week_data()
+                st.session_state['confirming_reset'] = False
+                st.rerun()
+            if col2.button("Cancelar", key="confirm_reset_nao"):
+                st.session_state['confirming_reset'] = False
+                st.rerun()
 
 
 
