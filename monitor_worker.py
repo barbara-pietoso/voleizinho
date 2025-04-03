@@ -5,7 +5,10 @@ from watchdog.events import FileSystemEventHandler
 from twilio.rest import Client
 
 # Configurações do Twilio
-
+ACCOUNT_SID = "AC26b02e2da624219242572a471e7fccab"
+AUTH_TOKEN = "bbd70e13a34d8663d2ff21fe57f09aa5"
+TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"  # Número do Twilio para WhatsApp
+DESTINATION_NUMBER = "whatsapp:+555193402351"  # Seu número ou do grupo
 
 # Caminho do arquivo JSON
 JSON_FILE_PATH = r'C:\Users\mateus\Documents\Projetos\voleizinho\volei_agenda.json'
@@ -17,7 +20,7 @@ def enviar_mensagem_twilio(mensagem):
     content_message = json.dumps({"1": mensagem})
     message = client.messages.create(
         from_=TWILIO_WHATSAPP_NUMBER,
-        content_sid='',
+        content_sid='HX04f53b8e134d73751f8a4c55a36ec7e3',
         content_variables=content_message,
         # body=mensagem,
         to=DESTINATION_NUMBER
