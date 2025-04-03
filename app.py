@@ -163,9 +163,9 @@ with tab1:
     
     4) jogadores de fora só podem entrar na lista caso esteja sobrando lugar NO DIA do jogo, dando prioridade aos participantes do grupo.
 
-    5) vamos nos atentar aos horários! 
-    as vezes começamos a jogar 30min depois do nosso horário.
-    entendemos que sempre pode acontecer por causa de trabalho e trânsito, mas precisamos manter o comprometimento com o grupo.
+    5) vamos nos atentar aos horários, já que as vezes começamos a jogar 30min depois do nosso horário. claro que sempre pode acontecer por causa de trabalho e trânsito, mas precisamos manter o comprometimento com o grupo da melhor forma possível.
+
+    ademais, vamos curar onde dói! 🩹
     """)
 
 with tab2:
