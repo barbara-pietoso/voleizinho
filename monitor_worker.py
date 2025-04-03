@@ -17,7 +17,7 @@ def enviar_mensagem_twilio(mensagem):
     content_message = json.dumps({"1": mensagem})
     message = client.messages.create(
         from_=TWILIO_WHATSAPP_NUMBER,
-        content_sid='HX04f53b8e134d73751f8a4c55a36ec7e3',
+        content_sid='',
         content_variables=content_message,
         # body=mensagem,
         to=DESTINATION_NUMBER
