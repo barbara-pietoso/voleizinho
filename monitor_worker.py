@@ -11,7 +11,7 @@ TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"  # Número do Twilio para Whats
 DESTINATION_NUMBER = "whatsapp:+555193402351"  # Seu número ou do grupo
 
 # Caminho do arquivo JSON
-JSON_FILE_PATH = r'C:\Users\mateus\PycharmProjects\voleizinho\volei_agenda.json'
+JSON_FILE_PATH = r'C:\Users\mateus\Documents\Projetos\voleizinho\volei_agenda.json'
 
 # Função para enviar mensagens pelo Twilio
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
@@ -48,7 +48,7 @@ class MonitorJSON(FileSystemEventHandler):
 if __name__ == "__main__":
     event_handler = MonitorJSON()
     observer = Observer()
-    observer.schedule(event_handler, path=r'C:\Users\mateus\PycharmProjects\voleizinho', recursive=False)
+    observer.schedule(event_handler, path=r'C:\Users\mateus\Documents\Projetos\voleizinho', recursive=False)
     observer.start()
     print("Monitorando alterações no JSON...")
     try:

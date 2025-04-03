@@ -32,7 +32,7 @@ pip install -r requirements.txt
 
 ### 1. Execute o monitoramento de alterações no JSON
 ```bash
-python monitor_twilio.py
+python monitor_worker.py
 ``` 
 
 ### 2. Execute a aplicação Streamlit
