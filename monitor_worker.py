@@ -5,10 +5,7 @@ from watchdog.events import FileSystemEventHandler
 from twilio.rest import Client
 
 # Configurações do Twilio
-ACCOUNT_SID = "AC26b02e2da624219242572a471e7fccab"
-AUTH_TOKEN = "bbd70e13a34d8663d2ff21fe57f09aa5"
-TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"  # Número do Twilio para WhatsApp
-DESTINATION_NUMBER = "whatsapp:+555193402351"  # Seu número ou do grupo
+
 
 # Caminho do arquivo JSON
 JSON_FILE_PATH = r'C:\Users\mateus\Documents\Projetos\voleizinho\volei_agenda.json'
