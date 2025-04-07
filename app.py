@@ -18,11 +18,24 @@ QUADRAS_DISPONIVEIS = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "24
 # Dias da semana fixos
 DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
 
+# Estrutura padrão para cada dia
+DIA_ESTRUTURA = {
+    'Titulares': [],
+    'Reservas': [],
+    'Substitutos': [],
+    'Quadra': None
+}
+
 # Funções de carregamento/salvamento
 def load_data():
     if os.path.exists(data_file):
         with open(data_file, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+            # Garante que todos os dias estão presentes
+            for dia in DIAS_SEMANA:
+                if dia not in data:
+                    data[dia] = DIA_ESTRUTURA.copy()
+            return data
     return {}
 
 def save_data(data):
@@ -59,11 +72,8 @@ def should_reset():
 
 # Função para resetar os dados
 def reset_week_data():
-    st.session_state.volei_agenda = {
-        day: {'Titulares': [], 'Reservas': [], 'Substitutos': [], 'Quadra': None}
-        for day in DIAS_SEMANA
-    }
-    st.session_state.quadras = {day: None for day in DIAS_SEMANA}
+    st.session_state.volei_agenda = {dia: DIA_ESTRUTURA.copy() for dia in DIAS_SEMANA}
+    st.session_state.quadras = {dia: None for dia in DIAS_SEMANA}
     save_data(st.session_state.volei_agenda)
     save_quadras(st.session_state.quadras)
 
@@ -73,18 +83,15 @@ def initialize_data():
         reset_week_data()
     else:
         if 'volei_agenda' not in st.session_state:
-            st.session_state.volei_agenda = load_data()
-            if not st.session_state.volei_agenda:
-                st.session_state.volei_agenda = {
-                    day: {'Titulares': [], 'Reservas': [], 'Substitutos': [], 'Quadra': None}
-                    for day in DIAS_SEMANA
-                }
-                save_data(st.session_state.volei_agenda)
+            loaded_data = load_data()
+            # Garante que todos os dias estão presentes
+            st.session_state.volei_agenda = {dia: loaded_data.get(dia, DIA_ESTRUTURA.copy()) for dia in DIAS_SEMANA}
+            save_data(st.session_state.volei_agenda)
         
         if 'quadras' not in st.session_state:
             st.session_state.quadras = load_quadras()
             if not st.session_state.quadras:
-                st.session_state.quadras = {day: None for day in DIAS_SEMANA}
+                st.session_state.quadras = {dia: None for dia in DIAS_SEMANA}
                 save_quadras(st.session_state.quadras)
 
 # Função para remover jogador
