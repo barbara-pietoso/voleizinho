@@ -28,25 +28,43 @@ DIA_ESTRUTURA = {
 
 # Funções de carregamento/salvamento
 def load_data():
-    if os.path.exists(data_file):
-        with open(data_file, "r") as f:
-            data = json.load(f)
-            # Garante que todos os dias estão presentes
-            for dia in DIAS_SEMANA:
-                if dia not in data:
-                    data[dia] = DIA_ESTRUTURA.copy()
-            return data
-    return {}
+    try:
+        if os.path.exists(data_file):
+            with open(data_file, "r") as f:
+                data = json.load(f)
+                # Garante que todos os dias estão presentes com a estrutura correta
+                for dia in DIAS_SEMANA:
+                    if dia not in data:
+                        data[dia] = DIA_ESTRUTURA.copy()
+                    else:
+                        # Garante que todas as chaves existem
+                        for key in DIA_ESTRUTURA:
+                            if key not in data[dia]:
+                                data[dia][key] = DIA_ESTRUTURA[key]
+                return data
+    except (json.JSONDecodeError, FileNotFoundError):
+        pass
+    # Retorna estrutura vazia se arquivo não existir ou estiver corrompido
+    return {dia: DIA_ESTRUTURA.copy() for dia in DIAS_SEMANA}
 
 def save_data(data):
     with open(data_file, "w") as f:
         json.dump(data, f, indent=4)
 
 def load_quadras():
-    if os.path.exists(quadras_file):
-        with open(quadras_file, "r") as f:
-            return json.load(f)
-    return {}
+    try:
+        if os.path.exists(quadras_file):
+            with open(quadras_file, "r") as f:
+                quadras = json.load(f)
+                # Garante que todos os dias estão presentes
+                for dia in DIAS_SEMANA:
+                    if dia not in quadras:
+                        quadras[dia] = None
+                return quadras
+    except (json.JSONDecodeError, FileNotFoundError):
+        pass
+    # Retorna estrutura vazia se arquivo não existir ou estiver corrompido
+    return {dia: None for dia in DIAS_SEMANA}
 
 def save_quadras(data):
     with open(quadras_file, "w") as f:
@@ -83,16 +101,20 @@ def initialize_data():
         reset_week_data()
     else:
         if 'volei_agenda' not in st.session_state:
-            loaded_data = load_data()
+            st.session_state.volei_agenda = load_data()
             # Garante que todos os dias estão presentes
-            st.session_state.volei_agenda = {dia: loaded_data.get(dia, DIA_ESTRUTURA.copy()) for dia in DIAS_SEMANA}
+            for dia in DIAS_SEMANA:
+                if dia not in st.session_state.volei_agenda:
+                    st.session_state.volei_agenda[dia] = DIA_ESTRUTURA.copy()
             save_data(st.session_state.volei_agenda)
         
         if 'quadras' not in st.session_state:
             st.session_state.quadras = load_quadras()
-            if not st.session_state.quadras:
-                st.session_state.quadras = {dia: None for dia in DIAS_SEMANA}
-                save_quadras(st.session_state.quadras)
+            # Garante que todos os dias estão presentes
+            for dia in DIAS_SEMANA:
+                if dia not in st.session_state.quadras:
+                    st.session_state.quadras[dia] = None
+            save_quadras(st.session_state.quadras)
 
 # Função para remover jogador
 def remove_name(day, name, role):
