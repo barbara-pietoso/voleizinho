@@ -130,12 +130,64 @@ def remove_quadra(day):
     save_data(data)
     st.rerun()
 
+# Função para exportar resumo de um dia específico
+def exportar_resumo_dia(dia):
+    data, quadras = get_current_data()
+    dia_data = data[dia]
+    quadra = quadras.get(dia, "Não definida")
+    
+    if not dia_data['Titulares'] and not dia_data['Reservas'] and not dia_data['Substitutos']:
+        return f"Não há jogadores cadastrados para {dia}"
+    
+    texto = f"🏐 *LISTA PARA {dia.upper()}* 🏐\n"
+    texto += f"📍 *Quadra:* {quadra}\n\n"
+    
+    if dia_data['Titulares']:
+        texto += "🌟 *TITULARES* (15):\n"
+        texto += "\n".join([f"➡️ {i+1}. {nome}" for i, nome in enumerate(dia_data['Titulares'])]) + "\n\n"
+    
+    if dia_data['Reservas']:
+        texto += "🔄 *RESERVAS* (3):\n"
+        texto += "\n".join([f"⏳ {i+1}. {nome}" for i, nome in enumerate(dia_data['Reservas'])]) + "\n\n"
+    
+    if dia_data['Substitutos']:
+        texto += "📋 *SUBSTITUTOS*:\n"
+        texto += "\n".join([f"⚡ {i+1}. {nome}" for i, nome in enumerate(dia_data['Substitutos'])]) + "\n"
+    
+    texto += "\n_Atualizado em: " + datetime.datetime.now().strftime("%d/%m/%Y %H:%M") + "_"
+    return texto
+
+# Função para exportar todas as listas
+def exportar_todas_listas():
+    data, quadras = get_current_data()
+    texto = "🏐 *LISTA COMPLETA DO VOLEIZINHO* 🏐\n\n"
+    
+    for dia in DIAS_SEMANA:
+        dia_data = data[dia]
+        quadra = quadras.get(dia, "Não definida")
+        
+        if dia_data['Titulares'] or dia_data['Reservas'] or dia_data['Substitutos']:
+            texto += f"*{dia.upper()}* (Quadra: {quadra})\n"
+            
+            if dia_data['Titulares']:
+                texto += "👉 Titulares:\n" + "\n".join([f"• {nome}" for nome in dia_data['Titulares']]) + "\n"
+            
+            if dia_data['Reservas']:
+                texto += "🔄 Reservas:\n" + "\n".join([f"• {nome}" for nome in dia_data['Reservas']]) + "\n"
+            
+            if dia_data['Substitutos']:
+                texto += "⏳ Substitutos:\n" + "\n".join([f"• {nome}" for nome in dia_data['Substitutos']]) + "\n"
+            
+            texto += "\n" + "="*30 + "\n\n"
+    
+    return texto if texto != "🏐 *LISTA COMPLETA DO VOLEIZINHO* 🏐\n\n" else "Nenhum jogador cadastrado em nenhum dia."
+
 # Verifica se precisa resetar os dados
 if should_reset():
     reset_week_data()
 
 # Layout principal com abas
-tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
+tab1, tab2, tab3 = st.tabs(["Início", "Listas da Semana", "Exportar Listas"])
 
 with tab1:
     st.title("VOLEIZINHO PRA CURAR ONDE DÓI 🏐🩹🌈")
@@ -145,32 +197,18 @@ with tab1:
     - Digite seu nome e clique em 'Entrar na Lista'
     - Atribua uma quadra para cada dia dentro da aba do dia
     - Para sair de uma lista, clique no ❌ ao lado do seu nome
+    - Na aba 'Exportar Listas', gere resumos diários para enviar no grupo
 
     **Regras das listas**
-    1) jogamos sempre a partir das listas criadas no grupo; 📝
-
-    2) estabelecemos uma lista de 15 pessoas + 3 reservas para os jogos, mais a lista de substituições, por ordem de preenchimento. 
-    primeiro entram para a lista os "reservas" e conforme for liberando vaga entram os "substitutos", de forma automática, no lugar de pessoas desistentes. 
-    
-    PORTANTO: 🔄
-    
-    reserva: joga revezando
-    
-    substituto: entra para a lista somente conforme as desistências 
-    
-    3) precisamos nos atentar para aqueles que colocam o nome na lista e não comparecem, já que isso prejudica aqueles que querem jogar e estão na lista de espera. lembrem de avisar com antecedência (tolerância de 2x, depois precisaremos tirar do grupo) 🔴
-    
-    4) jogadores de fora só podem entrar na lista caso esteja sobrando lugar NO DIA do jogo, dando prioridade aos participantes do grupo.
-
-    5) vamos nos atentar aos horários, já que as vezes começamos a jogar 30min depois do nosso horário. claro que sempre pode acontecer por causa de trabalho e trânsito, mas precisamos manter o comprometimento com o grupo da melhor forma possível.
-
-    ademais, vamos curar onde dói! 🩹
+    1) Jogamos sempre a partir das listas criadas no grupo; 📝
+    2) Lista de 15 titulares + 3 reservas + substitutos por ordem de chegada
+    3) Respeitar as listas e avisar com antecedência em caso de desistência
+    4) Jogadores externos só entram se houver vaga no dia
+    5) Chegar no horário combinado
     """)
 
 with tab2:
     st.title("Listas da Semana 🏐")
-    
-    # Carrega os dados atuais
     data, quadras = get_current_data()
     
     # Seção para adicionar jogadores
@@ -191,19 +229,23 @@ with tab2:
             else:
                 if len(day_data['Titulares']) < 15:
                     day_data['Titulares'].append(name)
+                    papel = "Titulares"
                 elif len(day_data['Reservas']) < 3:
                     day_data['Reservas'].append(name)
+                    papel = "Reservas"
                 else:
                     day_data['Substitutos'].append(name)
-                st.success(f"{name} adicionado à lista de {day}!")
+                    papel = "Substitutos"
+                
+                st.success(f"{name} adicionado como {papel} em {day}!")
         
         save_data(data)
         st.rerun()
     
     # Exibição das listas por dia
-    tabs = st.tabs(DIAS_SEMANA)
+    tabs_dias = st.tabs(DIAS_SEMANA)
     
-    for tab, day in zip(tabs, DIAS_SEMANA):
+    for tab, day in zip(tabs_dias, DIAS_SEMANA):
         with tab:
             current_quadra = quadras.get(day)
             day_data = data[day]
@@ -316,3 +358,41 @@ with tab2:
             if st.button("Cancelar", key="confirm_reset_nao"):
                 st.session_state['show_confirm_reset'] = False
                 st.rerun()
+
+with tab3:
+    st.title("Exportar Listas para WhatsApp")
+    
+    st.write("Selecione o dia para gerar o resumo pronto para enviar no grupo:")
+    
+    dia_selecionado = st.selectbox(
+        "Dia da semana:",
+        options=DIAS_SEMANA,
+        index=0,
+        key="select_dia_export"
+    )
+    
+    if st.button("Gerar Resumo Diário", key="botao_gerar_resumo"):
+        resumo = exportar_resumo_dia(dia_selecionado)
+        st.text_area("Resumo para WhatsApp:", 
+                    value=resumo, 
+                    height=300,
+                    key="texto_resumo_dia")
+        
+        # Botão para copiar automaticamente
+        st.button("📋 Copiar Resumo", 
+                 on_click=lambda: st.write(f'<script>navigator.clipboard.writeText(`{resumo}`)</script>', 
+                                         unsafe_allow_html=True))
+    
+    st.divider()
+    
+    if st.button("Gerar Lista Completa", key="botao_gerar_completa"):
+        lista_completa = exportar_todas_listas()
+        st.text_area("Lista Completa para WhatsApp:", 
+                    value=lista_completa, 
+                    height=400,
+                    key="texto_lista_completa")
+        
+        # Botão para copiar automaticamente
+        st.button("📋 Copiar Lista Completa", 
+                 on_click=lambda: st.write(f'<script>navigator.clipboard.writeText(`{lista_completa}`)</script>', 
+                                         unsafe_allow_html=True))
