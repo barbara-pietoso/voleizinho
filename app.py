@@ -90,35 +90,20 @@ def should_reset():
 
 # Função para resetar os dados
 def reset_week_data():
-    st.session_state.volei_agenda = {dia: DIA_ESTRUTURA.copy() for dia in DIAS_SEMANA}
-    st.session_state.quadras = {dia: None for dia in DIAS_SEMANA}
-    save_data(st.session_state.volei_agenda)
-    save_quadras(st.session_state.quadras)
+    data = {dia: DIA_ESTRUTURA.copy() for dia in DIAS_SEMANA}
+    quadras = {dia: None for dia in DIAS_SEMANA}
+    save_data(data)
+    save_quadras(quadras)
+    st.rerun()
 
-# Inicialização dos dados
-def initialize_data():
-    if should_reset():
-        reset_week_data()
-    else:
-        if 'volei_agenda' not in st.session_state:
-            st.session_state.volei_agenda = load_data()
-            # Garante que todos os dias estão presentes
-            for dia in DIAS_SEMANA:
-                if dia not in st.session_state.volei_agenda:
-                    st.session_state.volei_agenda[dia] = DIA_ESTRUTURA.copy()
-            save_data(st.session_state.volei_agenda)
-        
-        if 'quadras' not in st.session_state:
-            st.session_state.quadras = load_quadras()
-            # Garante que todos os dias estão presentes
-            for dia in DIAS_SEMANA:
-                if dia not in st.session_state.quadras:
-                    st.session_state.quadras[dia] = None
-            save_quadras(st.session_state.quadras)
+# Carrega os dados atuais
+def get_current_data():
+    return load_data(), load_quadras()
 
 # Função para remover jogador
 def remove_name(day, name, role):
-    day_data = st.session_state.volei_agenda[day]
+    data, quadras = get_current_data()
+    day_data = data[day]
     
     if name in day_data[role]:
         day_data[role].remove(name)
@@ -133,19 +118,21 @@ def remove_name(day, name, role):
             promoted = day_data["Substitutos"].pop(0)
             day_data["Reservas"].append(promoted)
         
-        save_data(st.session_state.volei_agenda)
+        save_data(data)
         st.rerun()
 
 # Função para remover quadra
 def remove_quadra(day):
-    st.session_state.quadras[day] = None
-    st.session_state.volei_agenda[day]['Quadra'] = None
-    save_quadras(st.session_state.quadras)
-    save_data(st.session_state.volei_agenda)
+    data, quadras = get_current_data()
+    quadras[day] = None
+    data[day]['Quadra'] = None
+    save_quadras(quadras)
+    save_data(data)
     st.rerun()
 
-# Inicializa os dados
-initialize_data()
+# Verifica se precisa resetar os dados
+if should_reset():
+    reset_week_data()
 
 # Layout principal com abas
 tab1, tab2 = st.tabs(["Início", "Listas da Semana"])
@@ -183,6 +170,9 @@ with tab1:
 with tab2:
     st.title("Listas da Semana 🏐")
     
+    # Carrega os dados atuais
+    data, quadras = get_current_data()
+    
     # Seção para adicionar jogadores
     st.subheader("Adicionar Jogador")
     days_selected = st.multiselect(
@@ -195,7 +185,7 @@ with tab2:
     
     if st.button("Entrar na Lista", key="botao_entrar_lista") and name:
         for day in days_selected:
-            day_data = st.session_state.volei_agenda[day]
+            day_data = data[day]
             if name in day_data['Titulares'] + day_data['Reservas'] + day_data['Substitutos']:
                 st.warning(f"Você já está na lista de {day}!")
             else:
@@ -207,7 +197,7 @@ with tab2:
                     day_data['Substitutos'].append(name)
                 st.success(f"{name} adicionado à lista de {day}!")
         
-        save_data(st.session_state.volei_agenda)
+        save_data(data)
         st.rerun()
     
     # Exibição das listas por dia
@@ -215,8 +205,8 @@ with tab2:
     
     for tab, day in zip(tabs, DIAS_SEMANA):
         with tab:
-            current_quadra = st.session_state.quadras.get(day)
-            data = st.session_state.volei_agenda[day]
+            current_quadra = quadras.get(day)
+            day_data = data[day]
             
             # Layout com duas colunas: Listas e Quadra
             col1, col2 = st.columns([3, 1])
@@ -225,15 +215,15 @@ with tab2:
                 st.markdown(f"**{day}**")
                 
                 # Listas de jogadores
-                st.write(f"**Titulares ({len(data['Titulares'])}/15):**")
-                for i, name in enumerate(data['Titulares']):
+                st.write(f"**Titulares ({len(day_data['Titulares'])}/15):**")
+                for i, name in enumerate(day_data['Titulares']):
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_tit_{day}_{name}"):
                         st.session_state[f"show_confirm_tit_{day}_{name}"] = True
                 
                 # Popover de confirmação para titulares
-                for i, name in enumerate(data['Titulares']):
+                for i, name in enumerate(day_data['Titulares']):
                     if st.session_state.get(f"show_confirm_tit_{day}_{name}"):
                         with st.popover(f"Confirmar remoção de {name}"):
                             st.write(f"Tem certeza que deseja remover {name} dos titulares?")
@@ -244,14 +234,14 @@ with tab2:
                                 del st.session_state[f"show_confirm_tit_{day}_{name}"]
                                 st.rerun()
                 
-                st.write(f"**Reservas ({len(data['Reservas'])}/3):**")
-                for i, name in enumerate(data['Reservas']):
+                st.write(f"**Reservas ({len(day_data['Reservas'])}/3):**")
+                for i, name in enumerate(day_data['Reservas']):
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_res_{day}_{name}"):
                         st.session_state[f"show_confirm_res_{day}_{name}"] = True
                 
-                for i, name in enumerate(data['Reservas']):
+                for i, name in enumerate(day_data['Reservas']):
                     if st.session_state.get(f"show_confirm_res_{day}_{name}"):
                         with st.popover(f"Confirmar remoção de {name}"):
                             st.write(f"Tem certeza que deseja remover {name} dos reservas?")
@@ -263,13 +253,13 @@ with tab2:
                                 st.rerun()
                 
                 st.write("**Substitutos:**")
-                for i, name in enumerate(data['Substitutos']):
+                for i, name in enumerate(day_data['Substitutos']):
                     cols = st.columns([4, 1])
                     cols[0].write(f"{i+1}. {name}")
                     if cols[1].button("❌", key=f"rem_sub_{day}_{name}"):
                         st.session_state[f"show_confirm_sub_{day}_{name}"] = True
                 
-                for i, name in enumerate(data['Substitutos']):
+                for i, name in enumerate(day_data['Substitutos']):
                     if st.session_state.get(f"show_confirm_sub_{day}_{name}"):
                         with st.popover(f"Confirmar remoção de {name}"):
                             st.write(f"Tem certeza que deseja remover {name} dos substitutos?")
@@ -306,10 +296,10 @@ with tab2:
                     )
                     
                     if quadra_selecionada and st.button("Selecionar", key=f"select_quadra_{day}"):
-                        st.session_state.quadras[day] = quadra_selecionada
-                        st.session_state.volei_agenda[day]['Quadra'] = quadra_selecionada
-                        save_quadras(st.session_state.quadras)
-                        save_data(st.session_state.volei_agenda)
+                        quadras[day] = quadra_selecionada
+                        data[day]['Quadra'] = quadra_selecionada
+                        save_quadras(quadras)
+                        save_data(data)
                         st.rerun()
 
     # Botão de reset manual com confirmação
