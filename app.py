@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 from datetime import timedelta
+import locale
 
 # --- Configurações Iniciais e Arquivos ---
 
@@ -50,6 +51,15 @@ def save_data(data, file_path):
 
 def get_current_and_next_month():
     """Retorna os nomes do mês atual e do próximo mês em português."""
+    # Tenta definir a localidade para português do Brasil
+    try:
+        locale.setlocale(locale.LC_TIME, 'pt_BR.utf-8')
+    except locale.Error:
+        try:
+            locale.setlocale(locale.LC_TIME, 'Portuguese_Brazil')
+        except locale.Error:
+            st.warning("Não foi possível definir a localidade para português. Os nomes dos meses podem não estar em português.")
+            
     now = datetime.datetime.now()
     current_month_name = now.strftime("%B").capitalize()
     
@@ -333,7 +343,7 @@ with tab_mensalistas:
     st.write("Gerencie a lista de mensalistas para os meses atuais e próximos.")
 
     # Pega os nomes dos meses
-    current_month_name, next_month_name = get_current_and_next_month()
+    current_month, next_month = get_current_and_next_month()
 
     # Formulário para adicionar mensalistas
     st.subheader("Adicionar Mensalista")
@@ -342,7 +352,7 @@ with tab_mensalistas:
     with col_add1:
         month_to_add = st.selectbox(
             "Adicionar para qual mês?",
-            options=[current_month_name, next_month_name],
+            options=[current_month, next_month],
             key="month_add_select"
         )
     with col_add2:
@@ -358,28 +368,28 @@ with tab_mensalistas:
     st.divider()
     
     # Exibir mensalistas do mês atual por dia
-    st.subheader(f"Lista de Mensalistas de {current_month_name}")
+    st.subheader(f"Lista de Mensalistas de {current_month}")
     for day in DIAS_SEMANA:
-        if st.session_state.mensalistas.get(current_month_name) and st.session_state.mensalistas[current_month_name].get(day):
+        if st.session_state.mensalistas.get(current_month) and st.session_state.mensalistas[current_month].get(day):
             st.markdown(f"**{day}:**")
-            for name in st.session_state.mensalistas[current_month_name][day]:
+            for name in st.session_state.mensalistas[current_month][day]:
                 cols = st.columns([4, 1])
                 cols[0].write(name)
-                if cols[1].button("❌", key=f"rem_mensal_{current_month_name}_{day}_{name}"):
-                    remove_mensalista(current_month_name, day, name)
+                if cols[1].button("❌", key=f"rem_mensal_{current_month}_{day}_{name}"):
+                    remove_mensalista(current_month, day, name)
 
     st.divider()
     
     # Exibir mensalistas do próximo mês por dia
-    st.subheader(f"Lista de Mensalistas de {next_month_name}")
+    st.subheader(f"Lista de Mensalistas de {next_month}")
     for day in DIAS_SEMANA:
-        if st.session_state.mensalistas.get(next_month_name) and st.session_state.mensalistas[next_month_name].get(day):
+        if st.session_state.mensalistas.get(next_month) and st.session_state.mensalistas[next_month].get(day):
             st.markdown(f"**{day}:**")
-            for name in st.session_state.mensalistas[next_month_name][day]:
+            for name in st.session_state.mensalistas[next_month][day]:
                 cols = st.columns([4, 1])
                 cols[0].write(name)
-                if cols[1].button("❌", key=f"rem_mensal_{next_month_name}_{day}_{name}"):
-                    remove_mensalista(next_month_name, day, name)
+                if cols[1].button("❌", key=f"rem_mensal_{next_month}_{day}_{name}"):
+                    remove_mensalista(next_month, day, name)
 
 with tab3:
     st.title("Exportar Listas para WhatsApp")
