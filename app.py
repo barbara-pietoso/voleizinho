@@ -60,10 +60,10 @@ def get_current_and_next_month():
     return current_month_name, next_month_name
 
 def create_mensalistas_structure(current_month, next_month):
-    """Cria a estrutura de dados para os mensalistas."""
+    """Cria a estrutura de dados para os mensalistas por dia da semana."""
     return {
-        current_month: [],
-        next_month: []
+        current_month: {dia: [] for dia in DIAS_SEMANA},
+        next_month: {dia: [] for dia in DIAS_SEMANA}
     }
 
 # --- Funções de Lógica da Aplicação ---
@@ -146,20 +146,20 @@ def remove_quadra(day):
     save_data(st.session_state.quadras, QUADRAS_FILE)
     st.rerun()
 
-def add_mensalista(month, name):
-    """Adiciona um nome à lista de mensalistas de um mês."""
-    if name not in st.session_state.mensalistas[month]:
-        st.session_state.mensalistas[month].append(name)
-        st.success(f"Mensalista {name} adicionado ao mês de {month}!")
+def add_mensalista(month, day, name):
+    """Adiciona um nome à lista de mensalistas de um mês e dia."""
+    if name not in st.session_state.mensalistas[month].get(day, []):
+        st.session_state.mensalistas[month][day].append(name)
+        st.success(f"Mensalista {name} adicionado ao mês de {month}, dia {day}!")
         save_data(st.session_state.mensalistas, MENSALISTAS_FILE)
         st.rerun()
     else:
-        st.warning(f"{name} já é mensalista para o mês de {month}!")
+        st.warning(f"{name} já é mensalista para {day} de {month}!")
 
-def remove_mensalista(month, name):
-    """Remove um nome da lista de mensalistas de um mês."""
-    if name in st.session_state.mensalistas[month]:
-        st.session_state.mensalistas[month].remove(name)
+def remove_mensalista(month, day, name):
+    """Remove um nome da lista de mensalistas de um mês e dia."""
+    if name in st.session_state.mensalistas[month][day]:
+        st.session_state.mensalistas[month][day].remove(name)
         save_data(st.session_state.mensalistas, MENSALISTAS_FILE)
         st.rerun()
 
@@ -214,7 +214,14 @@ if should_reset():
 # Inicializa o estado da sessão com os dados carregados
 current_month, next_month = get_current_and_next_month()
 default_mensalistas = create_mensalistas_structure(current_month, next_month)
-default_mensalistas.update(load_data(MENSALISTAS_FILE, default_mensalistas))
+# Carrega os dados de mensalistas e garante que a estrutura de dias da semana está correta
+mensalistas_from_file = load_data(MENSALISTAS_FILE, default_mensalistas)
+for month in [current_month, next_month]:
+    if month not in mensalistas_from_file:
+        mensalistas_from_file[month] = {dia: [] for dia in DIAS_SEMANA}
+    for day in DIAS_SEMANA:
+        if day not in mensalistas_from_file[month]:
+            mensalistas_from_file[month][day] = []
 
 if 'data' not in st.session_state:
     default_data = {dia: DIA_ESTRUTURA.copy() for dia in DIAS_SEMANA}
@@ -225,7 +232,7 @@ if 'quadras' not in st.session_state:
     st.session_state['quadras'] = load_data(QUADRAS_FILE, default_quadras)
 
 if 'mensalistas' not in st.session_state:
-    st.session_state['mensalistas'] = default_mensalistas
+    st.session_state['mensalistas'] = mensalistas_from_file
 
 # --- Layout Principal com Abas ---
 
@@ -323,7 +330,7 @@ with tab2:
 
 with tab_mensalistas:
     st.title("Mensalistas 💰")
-    st.write("Gerencie a lista de mensalistas para os meses atuais.")
+    st.write("Gerencie a lista de mensalistas para os meses atuais e próximos.")
 
     # Pega os nomes dos meses
     current_month_name, next_month_name = get_current_and_next_month()
@@ -331,39 +338,48 @@ with tab_mensalistas:
     # Formulário para adicionar mensalistas
     st.subheader("Adicionar Mensalista")
     new_mensalista_name = st.text_input("Nome do mensalista:", key="new_mensalista_name")
-    month_to_add = st.selectbox(
-        "Adicionar para qual mês?",
-        options=[current_month_name, next_month_name],
-        key="month_add_select"
-    )
+    col_add1, col_add2 = st.columns(2)
+    with col_add1:
+        month_to_add = st.selectbox(
+            "Adicionar para qual mês?",
+            options=[current_month_name, next_month_name],
+            key="month_add_select"
+        )
+    with col_add2:
+        day_to_add = st.selectbox(
+            "Adicionar para qual dia?",
+            options=DIAS_SEMANA,
+            key="day_add_select"
+        )
+
     if st.button("Adicionar Mensalista", key="add_mensalista_button") and new_mensalista_name:
-        add_mensalista(month_to_add, new_mensalista_name)
+        add_mensalista(month_to_add, day_to_add, new_mensalista_name)
 
     st.divider()
     
-    # Exibir mensalistas do mês atual
+    # Exibir mensalistas do mês atual por dia
     st.subheader(f"Lista de Mensalistas de {current_month_name}")
-    if st.session_state.mensalistas.get(current_month_name):
-        for name in st.session_state.mensalistas[current_month_name]:
-            cols = st.columns([4, 1])
-            cols[0].write(name)
-            if cols[1].button("❌", key=f"rem_mensal_{current_month_name}_{name}"):
-                remove_mensalista(current_month_name, name)
-    else:
-        st.info("Nenhum mensalista cadastrado para este mês.")
+    for day in DIAS_SEMANA:
+        if st.session_state.mensalistas.get(current_month_name) and st.session_state.mensalistas[current_month_name].get(day):
+            st.markdown(f"**{day}:**")
+            for name in st.session_state.mensalistas[current_month_name][day]:
+                cols = st.columns([4, 1])
+                cols[0].write(name)
+                if cols[1].button("❌", key=f"rem_mensal_{current_month_name}_{day}_{name}"):
+                    remove_mensalista(current_month_name, day, name)
 
     st.divider()
     
-    # Exibir mensalistas do próximo mês
+    # Exibir mensalistas do próximo mês por dia
     st.subheader(f"Lista de Mensalistas de {next_month_name}")
-    if st.session_state.mensalistas.get(next_month_name):
-        for name in st.session_state.mensalistas[next_month_name]:
-            cols = st.columns([4, 1])
-            cols[0].write(name)
-            if cols[1].button("❌", key=f"rem_mensal_{next_month_name}_{name}"):
-                remove_mensalista(next_month_name, name)
-    else:
-        st.info("Nenhum mensalista cadastrado para o próximo mês.")
+    for day in DIAS_SEMANA:
+        if st.session_state.mensalistas.get(next_month_name) and st.session_state.mensalistas[next_month_name].get(day):
+            st.markdown(f"**{day}:**")
+            for name in st.session_state.mensalistas[next_month_name][day]:
+                cols = st.columns([4, 1])
+                cols[0].write(name)
+                if cols[1].button("❌", key=f"rem_mensal_{next_month_name}_{day}_{name}"):
+                    remove_mensalista(next_month_name, day, name)
 
 with tab3:
     st.title("Exportar Listas para WhatsApp")
@@ -385,5 +401,4 @@ with tab3:
     if st.button("Gerar Lista Completa", key="botao_gerar_completa"):
         lista_completa = exportar_todas_listas()
         st.text_area("Lista Completa para WhatsApp:", value=lista_completa, height=400, key="texto_lista_completa")
-
 
