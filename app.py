@@ -29,6 +29,13 @@ DIA_ESTRUTURA = {
     'Quadra': None
 }
 
+# Dicionário para tradução manual dos meses
+MONTH_TRANSLATIONS = {
+    "january": "Janeiro", "february": "Fevereiro", "march": "Março", "april": "Abril",
+    "may": "Maio", "june": "Junho", "july": "Julho", "august": "Agosto",
+    "september": "Setembro", "october": "Outubro", "november": "Novembro", "december": "Dezembro"
+}
+
 # --- Funções de Carregamento e Salvamento de Dados ---
 
 def load_data(file_path, default_data):
@@ -50,22 +57,17 @@ def save_data(data, file_path):
 # --- Funções para Mês e Mensalistas ---
 
 def get_current_and_next_month():
-    """Retorna os nomes do mês atual e do próximo mês em português."""
-    # Tenta definir a localidade para português do Brasil, mas não exibe aviso se falhar.
-    try:
-        locale.setlocale(locale.LC_TIME, 'pt_BR.utf-8')
-    except locale.Error:
-        try:
-            locale.setlocale(locale.LC_TIME, 'Portuguese_Brazil')
-        except locale.Error:
-            pass # A falha é silenciosa, os nomes dos meses serão gerados pelo padrão do sistema (geralmente inglês).
-            
+    """Retorna os nomes do mês atual e do próximo mês em português, usando um dicionário para tradução."""
     now = datetime.datetime.now()
-    current_month_name = now.strftime("%B").capitalize()
+    
+    # Obtém o nome do mês em inglês e traduz
+    current_month_eng = now.strftime("%B").lower()
+    current_month_name = MONTH_TRANSLATIONS.get(current_month_eng, current_month_eng.capitalize())
     
     # Próximo mês
     next_month_date = now + timedelta(days=32)
-    next_month_name = next_month_date.strftime("%B").capitalize()
+    next_month_eng = next_month_date.strftime("%B").lower()
+    next_month_name = MONTH_TRANSLATIONS.get(next_month_eng, next_month_eng.capitalize())
     
     return current_month_name, next_month_name
 
