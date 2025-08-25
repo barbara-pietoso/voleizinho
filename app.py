@@ -434,9 +434,10 @@ with tab_mensalistas:
     for day in DIAS_SEMANA:
         if st.session_state.mensalistas.get(current_month) and st.session_state.mensalistas[current_month].get(day):
             st.markdown(f"**{day}:**")
-            for name in st.session_state.mensalistas[current_month][day]:
+            # Loop com numeração
+            for i, name in enumerate(st.session_state.mensalistas[current_month][day]):
                 cols = st.columns([4, 1])
-                cols[0].write(name)
+                cols[0].write(f"{i+1}. {name}")
                 if cols[1].button("❌", key=f"rem_mensal_{current_month}_{day}_{name}"):
                     remove_mensalista(current_month, day, name)
 
@@ -447,9 +448,10 @@ with tab_mensalistas:
     for day in DIAS_SEMANA:
         if st.session_state.mensalistas.get(next_month) and st.session_state.mensalistas[next_month].get(day):
             st.markdown(f"**{day}:**")
-            for name in st.session_state.mensalistas[next_month][day]:
+            # Loop com numeração
+            for i, name in enumerate(st.session_state.mensalistas[next_month][day]):
                 cols = st.columns([4, 1])
-                cols[0].write(name)
+                cols[0].write(f"{i+1}. {name}")
                 if cols[1].button("❌", key=f"rem_mensal_{next_month}_{day}_{name}"):
                     remove_mensalista(next_month, day, name)
 
@@ -473,3 +475,4 @@ with tab3:
     if st.button("Gerar Lista Completa", key="botao_gerar_completa"):
         lista_completa = exportar_todas_listas()
         st.text_area("Lista Completa para WhatsApp:", value=lista_completa, height=400, key="texto_lista_completa")
+
