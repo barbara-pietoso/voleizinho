@@ -109,7 +109,7 @@ def reset_week_data():
     st.rerun()
 
 def add_name(day, name):
-    """Adiciona um nome à lista de um dia específico e gera mensagem de inclusão."""
+    """Adiciona um nome à lista de um dia específico."""
     day_data = st.session_state.data[day]
     if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
         st.warning(f"Você já está na lista de {day}!")
@@ -132,7 +132,6 @@ def add_name(day, name):
     st.session_state.update_messages[day] = message
     
     st.success(f"{name} adicionado como {papel} em {day}!")
-    st.rerun()
 
 def remove_name(day, name, role):
     """Remove um nome de uma lista, promovendo jogadores se necessário e gerando mensagem."""
@@ -320,6 +319,7 @@ with tab2:
 
     # Seção para adicionar jogadores
     st.subheader("Adicionar Jogador")
+    # Revertido para st.multiselect para permitir seleção de múltiplos dias
     days_selected = st.multiselect(
         "Escolha os dias para jogar:",
         options=DIAS_SEMANA,
@@ -327,9 +327,11 @@ with tab2:
     )
     name = st.text_input("Seu nome:", key="input_nome_jogador")
     
-    if st.button("Entrar na Lista", key="botao_entrar_lista") and name:
+    # Ação do botão foi refatorada para adicionar a todos os dias selecionados e dar um único rerun
+    if st.button("Entrar na Lista", key="botao_entrar_lista") and name and days_selected:
         for day in days_selected:
             add_name(day, name)
+        st.rerun()
     
     st.divider()
 
@@ -385,7 +387,7 @@ with tab2:
             with col3:
                 st.markdown("---") # Placeholder para alinhar o botão
                 if st.button("📋 Copiar Lista", key=f"copy_list_{day}"):
-                    resumo_dia = exportar_resumo_dia(day)
+                    resumo_dia = exportar_resumo_dia(dia)
                     copy_to_clipboard_js(resumo_dia)
                     st.success("Resumo copiado!")
 
@@ -467,3 +469,4 @@ with tab3:
     if st.button("Gerar Lista Completa", key="botao_gerar_completa"):
         lista_completa = exportar_todas_listas()
         st.text_area("Lista Completa para WhatsApp:", value=lista_completa, height=400, key="texto_lista_completa")
+
