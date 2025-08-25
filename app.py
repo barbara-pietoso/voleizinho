@@ -22,12 +22,16 @@ RESET_FILE = "last_reset_date.txt"
 # Constantes
 QUADRAS_DISPONIVEIS = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "24", "25", "26"]
 DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
-DIA_ESTRUTURA = {
-    'Titulares': [],
-    'Reservas': [],
-    'Substitutos': [],
-    'Quadra': None
-}
+
+# Função para criar uma nova estrutura de dia com listas independentes
+def create_dia_estrutura():
+    """Cria e retorna uma nova estrutura de dados para um dia da semana."""
+    return {
+        'Titulares': [],
+        'Reservas': [],
+        'Substitutos': [],
+        'Quadra': None
+    }
 
 # Dicionário para tradução manual dos meses
 MONTH_TRANSLATIONS = {
@@ -94,7 +98,8 @@ def should_reset():
 
 def reset_week_data():
     """Reseta todos os dados das listas e quadras da semana."""
-    default_data = {dia: DIA_ESTRUTURA.copy() for dia in DIAS_SEMANA}
+    # Uso da nova função para garantir que cada dia tenha uma nova lista
+    default_data = {dia: create_dia_estrutura() for dia in DIAS_SEMANA}
     save_data(default_data, DATA_FILE)
     
     default_quadras = {dia: None for dia in DIAS_SEMANA}
@@ -278,7 +283,8 @@ for month in [current_month, next_month]:
             mensalistas_from_file[month][day] = []
 
 if 'data' not in st.session_state:
-    default_data = {dia: DIA_ESTRUTURA.copy() for dia in DIAS_SEMANA}
+    # A estrutura padrão agora usa a nova função create_dia_estrutura()
+    default_data = {dia: create_dia_estrutura() for dia in DIAS_SEMANA}
     st.session_state['data'] = load_data(DATA_FILE, default_data)
     
 if 'quadras' not in st.session_state:
@@ -319,7 +325,6 @@ with tab2:
 
     # Seção para adicionar jogadores
     st.subheader("Adicionar Jogador")
-    # Revertido para st.multiselect para permitir seleção de múltiplos dias
     days_selected = st.multiselect(
         "Escolha os dias para jogar:",
         options=DIAS_SEMANA,
@@ -327,7 +332,6 @@ with tab2:
     )
     name = st.text_input("Seu nome:", key="input_nome_jogador")
     
-    # Ação do botão foi refatorada para adicionar a todos os dias selecionados e dar um único rerun
     if st.button("Entrar na Lista", key="botao_entrar_lista") and name and days_selected:
         for day in days_selected:
             add_name(day, name)
@@ -469,4 +473,3 @@ with tab3:
     if st.button("Gerar Lista Completa", key="botao_gerar_completa"):
         lista_completa = exportar_todas_listas()
         st.text_area("Lista Completa para WhatsApp:", value=lista_completa, height=400, key="texto_lista_completa")
-
