@@ -51,14 +51,14 @@ def save_data(data, file_path):
 
 def get_current_and_next_month():
     """Retorna os nomes do mês atual e do próximo mês em português."""
-    # Tenta definir a localidade para português do Brasil
+    # Tenta definir a localidade para português do Brasil, mas não exibe aviso se falhar.
     try:
         locale.setlocale(locale.LC_TIME, 'pt_BR.utf-8')
     except locale.Error:
         try:
             locale.setlocale(locale.LC_TIME, 'Portuguese_Brazil')
         except locale.Error:
-            st.warning("Não foi possível definir a localidade para português. Os nomes dos meses podem não estar em português.")
+            pass # A falha é silenciosa, os nomes dos meses serão gerados pelo padrão do sistema (geralmente inglês).
             
     now = datetime.datetime.now()
     current_month_name = now.strftime("%B").capitalize()
@@ -98,13 +98,16 @@ def reset_week_data():
     default_quadras = {dia: None for dia in DIAS_SEMANA}
     save_data(default_quadras, QUADRAS_FILE)
     
+    # Resetar mensagens de atualização
+    st.session_state['update_messages'] = {dia: "" for dia in DIAS_SEMANA}
+
     st.session_state['data'] = default_data
     st.session_state['quadras'] = default_quadras
     st.success("Listas resetadas com sucesso!")
     st.rerun()
 
 def add_name(day, name):
-    """Adiciona um nome à lista de um dia específico."""
+    """Adiciona um nome à lista de um dia específico e gera mensagem de inclusão."""
     day_data = st.session_state.data[day]
     if name in day_data['Titulares'] or name in day_data['Reservas'] or name in day_data['Substitutos']:
         st.warning(f"Você já está na lista de {day}!")
@@ -121,12 +124,19 @@ def add_name(day, name):
         papel = "Substitutos"
     
     save_data(st.session_state.data, DATA_FILE)
+    
+    # Gerar mensagem de atualização
+    message = f"O jogo de {day} teve a **inclusão** de **{name}**."
+    st.session_state.update_messages[day] = message
+    
     st.success(f"{name} adicionado como {papel} em {day}!")
     st.rerun()
 
 def remove_name(day, name, role):
-    """Remove um nome de uma lista, promovendo jogadores se necessário."""
+    """Remove um nome de uma lista, promovendo jogadores se necessário e gerando mensagem."""
     day_data = st.session_state.data[day]
+    message = ""
+    
     if name in day_data[role]:
         day_data[role].remove(name)
         
@@ -137,11 +147,19 @@ def remove_name(day, name, role):
             if day_data["Substitutos"]:
                 promoted_substituto = day_data["Substitutos"].pop(0)
                 day_data["Reservas"].append(promoted_substituto)
-        elif role == "Reservas" and day_data["Substitutos"]:
-            promoted_substituto = day_data["Substitutos"].pop(0)
-            day_data["Reservas"].append(promoted_substituto)
-            
+            message = f"O jogo de {day} teve a **substituição** de **{name}** por **{promoted_reserva}**."
+        elif role in ["Titulares", "Reservas", "Substitutos"]:
+             message = f"O jogo de {day} teve a **exclusão** de **{name}**."
+             if role == "Reservas" and day_data["Substitutos"]:
+                promoted_substituto = day_data["Substitutos"].pop(0)
+                day_data["Reservas"].append(promoted_substituto)
+                message += f"\n👉 O substituto **{promoted_substituto}** foi promovido para a reserva."
+    
     save_data(st.session_state.data, DATA_FILE)
+    
+    if message:
+        st.session_state.update_messages[day] = message
+    
     st.rerun()
 
 def select_quadra(day, quadra):
@@ -174,13 +192,21 @@ def remove_mensalista(month, day, name):
         st.rerun()
 
 def exportar_resumo_dia(dia):
-    """Gera o texto de resumo de um dia para exportação."""
+    """Gera o texto de resumo de um dia para exportação, incluindo a mensagem de atualização."""
     dia_data = st.session_state.data[dia]
     quadra = st.session_state.quadras.get(dia, "Não definida")
+    update_message = st.session_state.update_messages.get(dia, "")
+
+    # Inicia com a mensagem de atualização, se existir
+    texto = ""
+    if update_message:
+        texto += f"{update_message}\n\n"
+
     if not dia_data['Titulares'] and not dia_data['Reservas'] and not dia_data['Substitutos']:
-        return f"Não há jogadores cadastrados para {dia}."
+        texto += f"Não há jogadores cadastrados para {dia}."
+        return texto
     
-    texto = f"🏐 *LISTA PARA {dia.upper()}* 🏐\n"
+    texto += f"🏐 *LISTA PARA {dia.upper()}* 🏐\n"
     texto += f"📍 *Quadra:* {quadra}\n\n"
     if dia_data['Titulares']:
         texto += "🌟 *TITULARES* (15):\n"
@@ -215,6 +241,23 @@ def exportar_todas_listas():
             texto += "\n" + "="*30 + "\n\n"
     return texto if has_players else "Nenhum jogador cadastrado em nenhum dia."
 
+def copy_to_clipboard_js(text_to_copy):
+    """
+    Função para gerar o código JavaScript que copia o texto para a área de transferência.
+    Usada para Streamlit, pois a interação direta com o clipboard não é nativa.
+    """
+    js_code = f"""
+    <script>
+    navigator.clipboard.writeText(`{text_to_copy}`).then(function() {{
+        // console.log('Texto copiado com sucesso!');
+    }}, function(err) {{
+        // console.error('Erro ao copiar o texto: ', err);
+    }});
+    </script>
+    """
+    st.components.v1.html(js_code, height=0)
+
+
 # --- Inicialização da Aplicação ---
 
 # Verifica se os dados devem ser resetados
@@ -243,6 +286,10 @@ if 'quadras' not in st.session_state:
 
 if 'mensalistas' not in st.session_state:
     st.session_state['mensalistas'] = mensalistas_from_file
+
+if 'update_messages' not in st.session_state:
+    st.session_state['update_messages'] = {dia: "" for dia in DIAS_SEMANA}
+
 
 # --- Layout Principal com Abas ---
 
@@ -291,7 +338,7 @@ with tab2:
             current_quadra = st.session_state.quadras.get(day)
             day_data = st.session_state.data[day]
             
-            col1, col2 = st.columns([3, 1])
+            col1, col2, col3 = st.columns([3, 1, 1])
             with col1:
                 st.markdown(f"**{day}**")
                 
@@ -332,7 +379,14 @@ with tab2:
                     )
                     if quadra_selecionada and st.button("Selecionar", key=f"select_quadra_{day}"):
                         select_quadra(day, quadra_selecionada)
-    
+            
+            with col3:
+                st.markdown("---") # Placeholder para alinhar o botão
+                if st.button("📋 Copiar Lista", key=f"copy_list_{day}"):
+                    resumo_dia = exportar_resumo_dia(day)
+                    copy_to_clipboard_js(resumo_dia)
+                    st.success("Resumo copiado!")
+
     st.divider()
     # Botão de reset manual com confirmação
     if st.button("Resetar Todas as Listas (Apenas Admin)", key="botao_reset_admin"):
@@ -411,4 +465,3 @@ with tab3:
     if st.button("Gerar Lista Completa", key="botao_gerar_completa"):
         lista_completa = exportar_todas_listas()
         st.text_area("Lista Completa para WhatsApp:", value=lista_completa, height=400, key="texto_lista_completa")
-
