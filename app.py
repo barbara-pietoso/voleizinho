@@ -20,7 +20,7 @@ MENSALISTAS_FILE = "volei_mensalistas.json"
 RESET_FILE = "last_reset_date.txt"
 
 # Constantes
-QUADRAS_DISPONIVEIS = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "24", "25", "26"]
+QUADRAS_DISPONIVEIS = ["quintal do beach", "ACM","11ORLA", "12ORLA", "13ORLA", "14ORLA", "15ORLA", "16ORLA", "17ORLA", "18ORLA", "19ORLA", "24ORLA", "25ORLA", "26ORLA"]
 DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
 
 # Função para criar uma nova estrutura de dia com listas independentes
